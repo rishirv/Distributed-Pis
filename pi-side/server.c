@@ -1,4 +1,5 @@
 #include "server.h"
+#include "network.h"
 
 void *progs[];
 void *results[];

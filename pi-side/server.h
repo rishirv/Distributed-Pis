@@ -1,3 +1,5 @@
+#include "rpi.h"
+
 // Initialize connection with ESP
 void server_esp_init();
 
