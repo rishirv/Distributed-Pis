@@ -8,7 +8,7 @@ COMMON_SRC += interrupts/interrupts-asm.S
 PROGS = $(wildcard *.c)
 #PROGS := interrupts/timer.c
 
-DIR:= $(CS140E_2023_PATH)/libpi
+DIR:= $(CS140E_PROJ_PATH)/libpi
 STAFF_OBJS := $(DIR)/staff-objs/kmalloc.o 
 
-include $(CS140E_2023_PATH)/libpi/mk/Makefile.template
+include $(CS140E_PROJ_PATH)/libpi/mk/Makefile.template

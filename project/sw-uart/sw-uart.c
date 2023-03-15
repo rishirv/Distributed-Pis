@@ -40,6 +40,41 @@ void sw_uart_put8(sw_uart_t *uart, unsigned char c) {
     write_cyc_until(uart->tx,1,cycle_cnt_read(),uart->cycle_per_bit);
 }
 
+int sw_uart_get8_timeout(sw_uart_t* uart, uint32_t timeout_usec){
+    int c = 0;
+    // start a timeout timer
+    uint32_t timer_st = timer_get_usec();
+    // normally high will start reading once it goes low
+    while(!gpio_read(uart->rx) && (timer_get_usec() - timer_st) < timeout_usec);
+    while(gpio_read(uart->rx) && (timer_get_usec() - timer_st) < timeout_usec);
+    // if we fell through due to timeout then we return a -1
+    if (timer_get_usec() - timer_st > timeout_usec) return -1;
+
+    int start = cycle_cnt_read();
+    delay_ncycles(start,(uart->cycle_per_bit) /2);
+    start += uart->cycle_per_bit /2;
+    
+    delay_ncycles(start,(uart->cycle_per_bit) );
+    start += uart->cycle_per_bit;
+
+    for(int i = 0; i <8; i++){
+        c |= gpio_read(uart->rx) << i;
+        delay_ncycles(start,uart->cycle_per_bit);
+        start += uart->cycle_per_bit;
+    }
+    return c;
+}
+
+// gets 32 beautiful bytes of data, applies the timeout to each byte
+// if any byte times out we return with a -1 
+int sw_uart_get32B(sw_uart_t* uart, uint32_t timeout_usec, uint8_t* buff){
+    for (int i = 0; i< 32; i++){
+        int succ = sw_uart_get8_timeout(uart,timeout_usec);
+        if (succ == -1) return -1;
+        buff[i] = (char)succ;
+    }
+    return 1;
+}
 // do this second: you can type in pi-cat to send stuff.
 //      EASY BUG: if you are reading input, but you do not get here in 
 //      time it will disappear.
@@ -55,23 +90,13 @@ int sw_uart_get8(sw_uart_t *uart) {
     
     delay_ncycles(start,(uart->cycle_per_bit) );
     start += uart->cycle_per_bit;
-   /* for (int i = 7; i >= 0; i --){
-        c |= gpio_read(uart->rx) << i;
-        delay_ncycles(start,uart->cycle_per_bit);
-        start += uart->cycle_per_bit;
-    }*/
+
     for(int i = 0; i <8; i++){
         c |= gpio_read(uart->rx) << i;
         delay_ncycles(start,uart->cycle_per_bit);
         start += uart->cycle_per_bit;
     }
- //   while(!gpio_read(uart->rx));
-    //printk("%x",c);
     return c;
-
-    // put c into buffer
-    // increment buffer
-    // jump back up to line 50 
 }
 
 // setup the GPIO pins

@@ -29,7 +29,7 @@ endif
 DEPS += ./src
 
 
-include $(CS140E_2023_PATH)/libpi/mk/Makefile.lib.template
+include $(CS140E_PROJ_PATH)/libpi/mk/Makefile.lib.template
 
 all:: $(START)
 

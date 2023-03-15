@@ -20,27 +20,24 @@ void notmain(void) {
   /*  for(int i = 0; i < 10; i++)
         sw_uart_putk(&u, "TRACE: sw_uart: hello world\n");
 */
-    char buff[32];
+    char* buff = kmalloc(sizeof(char) * 32);
 
     sw_uart_put8(&u,'a');
-    uint32_t start = timer_get_usec();
-    for (int i = 0; i < 5; i++){
-    buff[i] = sw_uart_get8(&u);
-    }
-    
-    for(int i = 0; i< 5; i++){
-        printk("%c\n",buff[i]);
-    }
-    uint32_t end = timer_get_usec();
-    printk("%d\n", end-start);
-    buff[6] = '\0';
-    
-    //delay_us(50000);
+    if (sw_uart_get32B(&u,5000000, buff) == -1){
+        printk("Uh oh Seems we timed out\n");
+    } 
     printk("we got from esp [%s]\n",buff);
-  //  printk("%c\n",e);
-    //printk("%c\n",f);
+
+    // clearing the buffer
+    //memset(0,buff,32);
     
-    // reset to using the hardware uart.
+    sw_uart_put8(&u,'b');
+    if (sw_uart_get32B(&u,5000000,buff) == -1){
+        printk("We timed out when expected, should wait about 5 seconds (i think)");
+    }
+    
+    printk("we got from esp (expect empty) [%s]\n",buff);
+
  //   uart_init();
     trace("TRACE: done!\n");
 }

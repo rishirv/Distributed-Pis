@@ -11,7 +11,7 @@ PROGS = hello.c
 #PROGS = 1-getc-test.c
 #once your sw-uart works: add sw-uart-veneer.c
  COMMON_SRC += sw-uart-veneer.c
-COMMON_SRC += sw-uart.c
+#COMMON_SRC += sw-uart.c
 
 # can use the staff code to see that things work.
 # STAFF_OBJS := staff-sw-uart.o
@@ -22,7 +22,7 @@ COMMON_SRC += sw-uart.c
 BOOTLOADER = my-install
 
 EXCLUDE = grep -v simple_boot
-include $(CS140E_2023_PATH)/libpi/mk/Makefile.template-v2
+include $(CS140E_PROJ_PATH)/libpi/mk/Makefile.template-v2
 
 checkoff:
 	@echo "you should have copied sw-uart.o into your libpi/src directory";

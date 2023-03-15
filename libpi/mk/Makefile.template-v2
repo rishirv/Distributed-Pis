@@ -90,7 +90,7 @@ VPATH := $(sort $(dir $(dep)))
 .SUFFIXES: .run
 
 # ugh: includes defines it
-include $(CS140E_2023_PATH)/libpi/defs.mk
+include $(CS140E_PROJ_PATH)/libpi/defs.mk
 # CFLAGS += -Wno-unused-function -Wno-unused-variable  $(EXTRA_CFLAGS)
 CFLAGS += $(EXTRA_CFLAGS)
 CFLAGS += -MMD
