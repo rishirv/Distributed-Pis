@@ -49,6 +49,8 @@ void sw_uart_put8(sw_uart_t *uart, uint8_t b);
 //    there is no data.
 int sw_uart_get8_timeout(sw_uart_t *uart, uint32_t timeout_usec);
 
+int sw_uart_get32B(sw_uart_t * uart, uint32_t timeout_usec);
+
 /************************************************************************
  * we give you the following code, which all calls your put8/get8 
  * implementations.
