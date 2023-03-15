@@ -6,7 +6,7 @@ void client_esp_init(char pi_id);
 // Send the result of the previous computation.
 void broadcast_avail(void *res);
 
-// Read a program from the server into buf 
+// Read a program from the server into buf
 // and return the number of bytes written.
 // Blocks until a program is sent
 uint32_t get_prog(void *buf);
