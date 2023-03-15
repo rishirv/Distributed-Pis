@@ -1,4 +1,5 @@
 enum PI_COMMANDS {
+    TMP
 };
 
 enum ESP_COMMANDS {
@@ -10,4 +11,5 @@ enum ESP_COMMANDS {
     ESP_GET_CONNECTED_LIST,
     ESP_NOP,
     ESP_ACK,
+    ESP_SEND_PROG,
 };

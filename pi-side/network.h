@@ -1,29 +1,19 @@
 #include "rpi.h"
 #include "spi.h"
+#include "sw-uart.h"
+#include "network-types.h"
 // #include "pi-esp.h"
 
-typedef struct {
-    uint8_t to : 4;
-    uint8_t from : 4;
-    uint8_t isCmd : 1;
-    uint8_t packetBytes : 5;
-    uint8_t sbz : 2;
-} header_t;
+// This PI's id - initialized on init
+uint8_t my_id;
+// IMPORTANT TODO: REMEMBER TO INIT
+sw_uart_t *uart;
 
-_Static_assert(sizeof(header_t) == 2, "header size is wrong");
+void write_packet(const packet_t *pkt);
+packet_t read_packet();
 
-typedef struct {
-    uint32_t nbytes;
-    uint8_t cmd;
-    uint32_t cksumData;
-} __attribute__((packed)) cmd_t;
-
-_Static_assert(sizeof(cmd_t) == 9, "command size is wrong");
-
-// need to figure out how we represent to/from
-// will need a way to compute checksums
-
-uint8_t spi_chip = 0;  // just use chip 0 always
+packet_t make_command(header_t header, cmd_t cmd);
+packet_t make_data(header_t header, data_t data);
 
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
