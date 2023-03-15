@@ -51,17 +51,11 @@ int sw_uart_get8(sw_uart_t *uart) {
     
     delay_ncycles(start,(uart->cycle_per_bit) );
     start += uart->cycle_per_bit;
-   /* for (int i = 7; i >= 0; i --){
-        c |= gpio_read(uart->rx) << i;
-        delay_ncycles(start,uart->cycle_per_bit);
-        start += uart->cycle_per_bit;
-    }*/
-    for(int i = 0; i <8; i++){
+    for(int i = 0; i < 8; i++){
         c |= gpio_read(uart->rx) << i;
         delay_ncycles(start,uart->cycle_per_bit);
         start += uart->cycle_per_bit;
     }
-    //printk("%x",c);
     return c;
 }
 ​
@@ -87,7 +81,7 @@ sw_uart_t sw_uart_mk_helper(unsigned tx, unsigned rx,
     unsigned derived = cyc_per_bit * baud;
     assert((mhz - baud) <= derived && derived <= (mhz + baud));
     // panic("cyc_per_bit = %d * baud = %d\n", cyc_per_bit, cyc_per_bit * baud);
-​
+​   
     return (sw_uart_t) {
             .tx = tx,
             .rx = rx,
