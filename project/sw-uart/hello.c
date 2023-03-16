@@ -44,7 +44,7 @@ void notmain(void) {
     
     
     //printk("we got from esp (expect empty) [%s]\n",buff);
-    send_cmd(ESP_ACK,0b1111,NULL,0);
+    send_cmd(ESP_ACK,0b1010,0b1111,NULL,0);
   // sw_uart_put8(&u,0);
  //   uart_init();
     trace("TRACE: done!\n");
