@@ -20,7 +20,7 @@ void notmain(void) {
   /*  for(int i = 0; i < 10; i++)
         sw_uart_putk(&u, "TRACE: sw_uart: hello world\n");
 */
-    char* buff = kmalloc(sizeof(char) * 32);
+    /*char* buff = kmalloc(sizeof(char) * 32);
 
     sw_uart_put8(&u,'a');
     if (sw_uart_get32B(&u,5000000, buff) == -1){
@@ -31,12 +31,18 @@ void notmain(void) {
     // clearing the buffer
     //memset(0,buff,32);
     
-    sw_uart_put8(&u,'b');
+   sw_uart_put8(&u,'b');
     if (sw_uart_get32B(&u,5000000,buff) == -1){
         printk("We timed out when expected, should wait about 5 seconds (i think)");
-    }
+    }*/
     
-    printk("we got from esp (expect empty) [%s]\n",buff);
+   // char* buff = kmalloc(sizeof(char) * 15);
+    //memset(buff,'a',13);
+    //buff[14] = '\n';
+    sw_uart_putk(&u,"abcdefghijklmnopqrstuvwxyzabcde");
+    
+
+    //printk("we got from esp (expect empty) [%s]\n",buff);
 
  //   uart_init();
     trace("TRACE: done!\n");

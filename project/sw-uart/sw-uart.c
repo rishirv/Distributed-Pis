@@ -30,6 +30,10 @@ static inline void timed_write(int pin, int v, unsigned usec) {
 //  recall: time to write each bit (0 or 1) is in <uart->usec_per_bit>
 void sw_uart_put8(sw_uart_t *uart, unsigned char c) {
     int start = cycle_cnt_read();
+    // forces a falling edge
+    write_cyc_until(uart->tx,1,cycle_cnt_read(),uart->cycle_per_bit);
+    start += uart->cycle_per_bit;
+    // start bit
     write_cyc_until(uart->tx,0,cycle_cnt_read(),uart->cycle_per_bit);
     start += uart->cycle_per_bit;
     for(int i = 0; i < 8; i ++){
