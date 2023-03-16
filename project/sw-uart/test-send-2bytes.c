@@ -1,7 +1,6 @@
 // the sw uart should  print hello world 10x if it works.
 #include "rpi.h"
 #include "sw-uart.h"
-#include "fast-hash32.h"
 
 void notmain(void) {
     trace("about to use the sw-uart\n");
@@ -23,9 +22,7 @@ void notmain(void) {
 */
     char* buff = kmalloc(sizeof(char) * 32);
 
-    // NOTE: Sending one byte works just fine, sending 32 via putk sends garbage
-    //sw_uart_put8(&u,'a');
-    sw_uart_putk(&u, "abcdefghijklmnopqrstuvwxyzabcdef");
+    sw_uart_put8(&u,'a');
     if (sw_uart_get32B(&u,5000000, buff) == -1){
         printk("Uh oh Seems we timed out\n");
     } 
