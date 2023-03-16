@@ -10,7 +10,8 @@
 
 // will need a way to compute checksums
 
-/*enum { 
+/* Commands encoded like so:
+enum { 
     ESP_CLIENT_INIT         = 0b0001,
     ESP_SERVER_INIT         = 0b0010,
     ESP_SEND_DATA           = 0b0011,
@@ -47,9 +48,8 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     trace("checksum = %x\n", header->cksum);
     trace("cmnd = %d\n", header->cmnd);*/
     
-    // send the packet!
+    // send the command!
     sw_uart_putPckt(u, header);
-    printk("put header\n");
 
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;
@@ -84,5 +84,6 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     //TODO if ack recieved then return 1,
     //If No-ACK or timeout then resend from the top, probably keep retrans counter and 
     //eventually return -1 if the retrans maxes out. (this could be like a pi disconnected all of a sudden)
-    return 1;    
+    return 1; 
+}
 
