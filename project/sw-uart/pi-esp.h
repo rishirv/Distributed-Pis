@@ -76,7 +76,7 @@ uint8_t server_init(void);
     byte:    29 28 27 26  25  24 23 22 21 20 ... 0
              | totalsize |cmd| checksum  |        |
 */
-uint8_t send_cmd( sw_uart_t* u, uint8_t cmd, uint8_t to,uint8_t from, const void *data, uint32_t nbytes);
+uint8_t send_cmd(sw_uart_t* u, uint8_t cmd, uint8_t to, uint8_t from, const void *data, uint32_t nbytes);
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
 response or null if unsuccessful.*/

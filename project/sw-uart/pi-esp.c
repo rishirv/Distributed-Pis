@@ -4,12 +4,6 @@
 #include "pi-esp.h"
 #include "fast-hash32.h"
 
-// need an enum for the instruction codes
-
-// need to figure out how we represent to/from
-
-// will need a way to compute checksums
-
 /* Commands encoded like so:
 enum { 
     ESP_CLIENT_INIT         = 0b0001,
@@ -23,6 +17,30 @@ enum {
     ESP_NOACK               = 0b1001,
 };*/
 
+
+/* Send command and data from pi to esp in 32 byte packets with the following form:
+    Packet Headers (2 bytes) --> On every 32byte packet
+    4 bits: To
+    4 bits: From
+    1 bit: isCmd
+    5 bits: nbytes (in packet)
+    2 bits: SBZ
+    If isCmd: remaining bytes used for
+    4 bytes --> Size of data being sent (2GB)
+    1 bytes --> The actual Cmd (like connect to wifi or whatever)
+    4 bytes --> Check sum of all the data
+
+    Top 2 bytes of 32 byte packet:
+
+    bits:    15 14 13 12 11   10  9 8 7 6 5 4 3 2 1 0
+             | nbytes      |isCmd| from  | to    |sbz|
+    byte:               31                 30
+
+    Remaining bytes 29-0 are either data or the following if a command packet:
+    
+    byte:    29 28 27 26  25  24 23 22 21 20 ... 0
+             | totalsize |cmd| checksum  |        |
+*/
 uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void *bytes, uint32_t nbytes) {
     // first check to make sure we have a valid cmd - make sure to malloc it
     esp_cmnd_pckt_t *header = kmalloc(sizeof(esp_cmnd_pckt_t));
@@ -48,7 +66,7 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     trace("checksum = %x\n", header->cksum);
     trace("cmnd = %d\n", header->cmnd);*/
     
-    // send the command!
+    // send the packet!
     sw_uart_putPckt(u, header);
 
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
@@ -72,7 +90,6 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
         // update vars so we get next chunk of data
         bytes_left -= send_size;
         data += send_size;
-        
     }
      
     //TODO wait on a timeout for an ack back from the pi.
@@ -87,3 +104,23 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     return 1; 
 }
 
+/* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
+response or null if unsuccessful.*/
+uint8_t receive_data_nbytes(void) {
+    return 1;
+}
+
+// For Client: Prompt client esp to connect to the server via Wifi.begin()
+uint8_t connect_to_wifi(void) {
+    return 1;
+}
+
+// For Client: Returns whether or not this client pi's esp is connected to the server
+uint8_t is_connected(void) {
+    return 1;
+}
+
+// For Server: Obtains a list of clients currently connected to server
+uint8_t *get_connected(void) {
+    return NULL;
+}
