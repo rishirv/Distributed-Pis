@@ -43,6 +43,7 @@ typedef struct esp_cmnd_pckt {
     uint32_t size;
     uint8_t _sbz[21];
 } esp_cmnd_pckt;
+
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
 uint8_t client_init(void);
@@ -62,16 +63,20 @@ uint8_t server_init(void);
     4 bytes --> Size of data being sent (2GB)
     1 bytes --> The actual Cmd (like connect to wifi or whatever)
     4 bytes --> Check sum of all the data
+
     Top 2 bytes of 32 byte packet:
+
     bits:    15 14 13 12 11   10  9 8 7 6 5 4 3 2 1 0
              | nbytes      |isCmd| from  | to    |sbz|
     byte:               31                 30
+
     Remaining bytes 29-0 are either data or the following if a command packet:
     
     byte:    29 28 27 26  25  24 23 22 21 20 ... 0
              | totalsize |cmd| checksum  |        |
 */
-uint8_t send_cmd(uint8_t cmd, uint8_t to,uint8_t from, const void *data, uint32_t nbytes);
+
+uint8_t send_cmd(uint8_t cmd, uint32_t to, uint32_t from, const void *bytes, uint32_t nbytes);
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
 response or null if unsuccessful.*/
