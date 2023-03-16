@@ -1,8 +1,6 @@
 // the sw uart should  print hello world 10x if it works.
 #include "rpi.h"
 #include "sw-uart.h"
-#include "pi-esp.h"
-#include "fast-hash32.h"
 
 void notmain(void) {
     trace("about to use the sw-uart\n");
@@ -13,7 +11,6 @@ void notmain(void) {
 
     gpio_set_input(21);
     gpio_set_pullup(21);
-    //TODO change back to 23
     gpio_set_output(23);
     
     /*
@@ -23,11 +20,9 @@ void notmain(void) {
   /*  for(int i = 0; i < 10; i++)
         sw_uart_putk(&u, "TRACE: sw_uart: hello world\n");
 */
-    /*char* buff = kmalloc(sizeof(char) * 32);
+    char* buff = kmalloc(sizeof(char) * 32);
 
-    // NOTE: Sending one byte works just fine, sending 32 via putk sends garbage
-    //sw_uart_put8(&u,'a');
-    sw_uart_putk(&u, "abcdefghijklmnopqrstuvwxyzabcdef");
+    sw_uart_put8(&u,'a');
     if (sw_uart_get32B(&u,5000000, buff) == -1){
         printk("Uh oh Seems we timed out\n");
     } 
@@ -36,22 +31,13 @@ void notmain(void) {
     // clearing the buffer
     //memset(0,buff,32);
     
-   sw_uart_put8(&u,'b');
+    /*sw_uart_put8(&u,'b');
     if (sw_uart_get32B(&u,5000000,buff) == -1){
         printk("We timed out when expected, should wait about 5 seconds (i think)");
-    }*/
+    }
     
-   // char* buff = kmalloc(sizeof(char) * 15);
-    //memset(buff,'a',13);
-    //buff[14] = '\n';
-   // sw_uart_putk(&u,"abcdefghijklmnopqrstuvwxyzabcde");
-    
-    
-    //printk("we got from esp (expect empty) [%s]\n",buff);
-   // send_cmd(ESP_ACK,0b1010,0b1111,"Hello World From Pi",0);
-  // sw_uart_put8(&u,0);
+    printk("we got from esp (expect empty) [%s]\n",buff);*/
+
  //   uart_init();
- //
-   send_cmd(&u,0b1111,0b1010,0b1010,"HELLO WORLD FROM PI HERE IS SOME PACKETS ITS GONNA BE A LOT SO JUST HANG IN THERE",82);
     trace("TRACE: done!\n");
 }
