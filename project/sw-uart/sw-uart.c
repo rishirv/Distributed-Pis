@@ -12,7 +12,6 @@
 
 // simple putk to the given <uart>
 void sw_uart_putk(sw_uart_t *uart, const char *msg) {
-    trace("about to putk with msg: %s\n", msg);
     for(; *msg; msg++)
         sw_uart_put8(uart, *msg);
 }
