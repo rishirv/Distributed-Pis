@@ -28,33 +28,13 @@ uint8_t spi_chip = 0; // just use chip 0 always
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
 uint8_t client_init(void) {
-    uint8_t rx[32], tx[32];
-    tx[0] = ESP_CLIENT_INIT;
-    // not sure about the clock divider but this is what Dawson used
-    // see pin_init from lab 16
-    spi_t s = spi_n_init(spi_chip, 20);
-    spi_n_tranfer(s, rx, tx, 1);
-    /* TODO: either get status (i.e. success/failure) from status register, see lines 48-50:
-    https://github.com/esp8266/Arduino/blob/master/libraries/SPISlave/examples/SPISlave_Test/SPISlave_Test.ino
-    OR poll (transfer 0s) until you get a response from esp */
+    return 1;
 }
 
 /* Prompt the esp to init itself as an access point aka server in its setup
 Note: might not use, might just flash server code to dedicated server esp */
 uint8_t server_init(void) {
-    uint8_t rx[32], tx[32];
-    tx[0] = ESP_SERVER_INIT;
-    // not sure about the clock divider but this is what Dawson used
-    // see pin_init from lab 16
-    spi_t s = spi_n_init(spi_chip, 20);
-    spi_n_tranfer(s, rx, tx, 1);
-    // TODO: either get status (i.e. success/failure) from status register
-    // or poll (transfer 0s) until you get a response from esp
-}
-
-uint8_t convert_ip(uint32_t ip) {
-    // encode a 32bit ip address as its lower 4 bits
-    return (uint8_t)((ip << 28) >> 28);
+    return 1;
 }
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
@@ -82,11 +62,11 @@ uint8_t convert_ip(uint32_t ip) {
 */
 uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const void *bytes, uint32_t nbytes) {
     // first check to make sure we have a valid cmd - make sure to malloc it
-    esp_cmnd_packt_t *header = kmalloc(sizeof(esp_cmd_pckt));
+    esp_cmnd_pckt_t *header = kmalloc(sizeof(esp_cmnd_pckt_t));
     // zero out everything then set fields
     memset((char *)header, 0, 32);
     
-    // TODO formulate and send the cmnd pckt
+    // Build the command packet header
     header->_sbz1 = 0;
     header->nbytes = 0;
     header->isCmd = 1;
@@ -99,18 +79,23 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const vo
     header->size = nbytes;
     // shouldn't need to zero out _sbz padding again?
 
-    // send the command!
+    // For sanity checking
+    /*trace("from = %d, to = %d\n", header->esp_From, header->esp_To);
+    trace("checksum = %x\n", header->cksum);
+    trace("cmnd = %d\n", header->cmnd);*/
+    
+    // send the packet!
     sw_uart_putPckt(u, header);
 
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;
-    void *data = bytes;
+    char *data = (char *)bytes;
     
     while (bytes_left) {
         // Create data packet header
         uint8_t send_size = bytes_left >= 30 ? 30 : bytes_left % 30;
-        esp_pckt_t *pckt = kmalloc(sizeof(esp_pckt));
-        pckt->_sbz1 = 0;
+        esp_pckt_t *pckt = kmalloc(sizeof(esp_pckt_t));
+        pckt->_sbz = 0;
         pckt->nbytes = send_size;
         pckt->isCmd = 0;    // this is a data packet!
         pckt->esp_From = (from & 0xf);
@@ -139,31 +124,21 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const vo
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
 response or null if unsuccessful.*/
-uint8_t receive_data_nbytes(void);
+uint8_t receive_data_nbytes(void) {
+    return 1;
+}
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
 uint8_t connect_to_wifi(void) {
-    uint8_t rx[32], tx[32];
-    tx[0] = ESP_WIFI_CONNECT;
-    // not sure about the clock divider but this is what Dawson used
-    // see pin_init from lab 16
-    spi_t s = spi_n_init(spi_chip, 20);
-    spi_n_tranfer(s, rx, tx, 1);
-    // TODO: either get status (i.e. success/failure) from status register
-    // or poll (transfer 0s) until you get a response from esp
+    return 1;
 }
 
 // For Client: Returns whether or not this client pi's esp is connected to the server
 uint8_t is_connected(void) {
-    uint8_t rx[32], tx[32];
-    tx[0] = ESP_WIFI_CONNECT;
-    // not sure about the clock divider but this is what Dawson used
-    // see pin_init from lab 16
-    spi_t s = spi_n_init(spi_chip, 20);
-    spi_n_tranfer(s, rx, tx, 1);
-    // TODO: either get status (i.e. success/failure) from status register
-    // or poll (transfer 0s) until you get a response from esp
+    return 1;
 }
 
 // For Server: Obtains a list of clients currently connected to server
-uint8_t *get_connected(void);
+uint8_t *get_connected(void) {
+    return NULL;
+}

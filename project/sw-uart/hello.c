@@ -18,44 +18,13 @@ void notmain(void) {
     /*
     // use pin 14 for tx, 15 for rx*/
     sw_uart_t u = sw_uart_init(23,21, 9600);
+    
+    // Test that you can send the following command with no data
+    send_cmd(&u, ESP_ACK,0b1010,0b1111,NULL,0);
 
-  /*  for(int i = 0; i < 10; i++)
-        sw_uart_putk(&u, "TRACE: sw_uart: hello world\n");
-*/
-    /*char* buff = kmalloc(sizeof(char) * 32);
-
-    // NOTE: Sending one byte works just fine, sending 32 via putk sends garbage
-    //sw_uart_put8(&u,'a');
-    sw_uart_putk(&u, "abcdefghijklmnopqrstuvwxyzabcdef");
     if (sw_uart_get32B(&u,5000000, buff) == -1){
         printk("Uh oh Seems we timed out\n");
     } 
     printk("we got from esp [%s]\n",buff);
-
-    // clearing the buffer
-    memset((char *)buff, 0, 32);
-
-    sw_uart_putk(&u,"qrstuvwxyzabcdefabcdefghijklmnop");
-    if (sw_uart_get32B(&u,5000000,buff) == -1){
-        printk("We timed out when expected, should wait about 5 seconds (i think)");
-    }
-    
-    printk("we got from esp [%s]\n",buff);
-    
-   sw_uart_put8(&u,'b');
-    if (sw_uart_get32B(&u,5000000,buff) == -1){
-        printk("We timed out when expected, should wait about 5 seconds (i think)");
-    }*/
-    
-   // char* buff = kmalloc(sizeof(char) * 15);
-    //memset(buff,'a',13);
-    //buff[14] = '\n';
-   // sw_uart_putk(&u,"abcdefghijklmnopqrstuvwxyzabcde");
-    
-    
-    //printk("we got from esp (expect empty) [%s]\n",buff);
-    send_cmd(ESP_ACK,0b1010,0b1111,NULL,0);
-  // sw_uart_put8(&u,0);
- //   uart_init();
     trace("TRACE: done!\n");
 }

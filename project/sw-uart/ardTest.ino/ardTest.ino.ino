@@ -32,6 +32,8 @@ void setup() {
 
 }
 
+// Test that we can send a simple command with no header from pi to esp:
+// send_cmd(&u,ESP_ACK, 0B1010, 0B111, NULL, 0)
 void loop() {
   
   if (mySerial.available() == 32){
@@ -41,13 +43,21 @@ void loop() {
     for (int i =0; i < 32; i++){
       buff[i] = mySerial.read();
     }
-    esp_cmnd_pckt * cmnd = (esp_cmnd_pckt*) buff;
+    mySerial.print("got some stuff!");
+    esp_cmnd_pckt * pkt = (esp_cmnd_pckt*) buff;
 
-    if (cmnd->isCmd) {
-      Serial.println("isCmnd checks out");
+    if (pkt->isCmd) {
+      Serial.println("isCmnd checks out\n");
     }
-    if (cmnd->esp_To == 0b1111){
-      Serial.println("Esp to checks out");
+    if (pkt->cmnd == 0b1000){
+      Serial.println("command checks out\n");
     }
+    if (pkt->esp_To == 0b1010){
+      Serial.println("TO checks out\n");
+    }
+    if (pkt->esp_From == 0b1111){
+      Serial.println("FROM checks out\n");
+    }
+    Serial.println(buff);
   }
 }

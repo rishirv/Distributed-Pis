@@ -1,5 +1,5 @@
 #include "rpi.h"
-#include "spi.h"
+#include "sw-uart.h"
 
 // need an enum for the instruction codes
 
@@ -76,7 +76,7 @@ uint8_t server_init(void);
              | totalsize |cmd| checksum  |        |
 */
 
-uint8_t send_cmd(uint8_t cmd, uint32_t to, uint32_t from, const void *bytes, uint32_t nbytes);
+uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const void *bytes, uint32_t nbytes);
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
 response or null if unsuccessful.*/
