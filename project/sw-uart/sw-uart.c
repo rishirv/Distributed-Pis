@@ -15,6 +15,12 @@ void sw_uart_putk(sw_uart_t *uart, const char *msg) {
         sw_uart_put8(uart, *msg);
 }
 
+void sw_uart_putPckt(sw_uart_t *uart, void *msg) {
+    char* msgC = (char *)msg;
+    for(int i = 0; i < 32; i++)
+        sw_uart_put8(uart, msgC[i]);
+}
+
 // helper: cleans up the code: do a write for <usec> microseconds
 //
 // code that uses it will have a lot of compounding error, however.  

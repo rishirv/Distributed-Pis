@@ -50,8 +50,7 @@ int sw_uart_get8_timeout(sw_uart_t *uart, uint32_t timeout_usec);
 
 int sw_uart_get32B(sw_uart_t * uart, uint32_t timeout_usec, uint8_t* buff);
 
-int crazy_func_name();
-
+void sw_uart_putPckt(sw_uart_t * uart, void*msg);
 /************************************************************************
  * we give you the following code, which all calls your put8/get8 
  * implementations.

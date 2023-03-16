@@ -1,6 +1,7 @@
 // the sw uart should  print hello world 10x if it works.
 #include "rpi.h"
 #include "sw-uart.h"
+#include "pi-esp.h"
 
 void notmain(void) {
     trace("about to use the sw-uart\n");
@@ -39,11 +40,12 @@ void notmain(void) {
    // char* buff = kmalloc(sizeof(char) * 15);
     //memset(buff,'a',13);
     //buff[14] = '\n';
-    sw_uart_putk(&u,"abcdefghijklmnopqrstuvwxyzabcde");
+   // sw_uart_putk(&u,"abcdefghijklmnopqrstuvwxyzabcde");
     
-
+    
     //printk("we got from esp (expect empty) [%s]\n",buff);
-
+    send_cmd(ESP_ACK,0b1111,NULL,0);
+  // sw_uart_put8(&u,0);
  //   uart_init();
     trace("TRACE: done!\n");
 }
