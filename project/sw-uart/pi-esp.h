@@ -29,7 +29,7 @@ typedef struct esp_pckt {
         esp_From:4,
         esp_To:4;
     uint8_t data[30];
-} esp_pckt;
+} esp_pckt_t;
 
 typedef struct esp_cmnd_pckt {
     uint16_t
@@ -42,7 +42,7 @@ typedef struct esp_cmnd_pckt {
     uint8_t cmnd;
     uint32_t size;
     uint8_t _sbz[21];
-} esp_cmnd_pckt;
+} esp_cmnd_pckt_t;
 
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */

@@ -80,61 +80,33 @@ uint8_t convert_ip(uint32_t ip) {
     byte:    29 28 27 26  25  24 23 22 21 20 ... 0
              | totalsize |cmd| checksum  |        |
 */
-uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const void *bytes, uint32_t nbytes) {
-    // first check to make sure we have a valid cmd - make sure to malloc it
-    esp_cmnd_packt_t *header = kmalloc(sizeof(esp_cmd_pckt));
-    // zero out everything then set fields
-    memset((char *)header, 0, 32);
+uint8_t send_cmd(uint8_t cmd, uint32_t to, uint32_t from, const void *bytes, uint32_t nbytes) {
+    // 1. build command header, will decompose later!
+    uint8_t tx[32];
+    // msb to lsb: nbytes (0 for cmd packet), isCmd bit, from, to, 2 0s padding
+    uint16_t hdr = (0 << 11) | (1 << 10) | ((from & 0xf) << 6) | ((to & 0xf) << 2);
+    tx[0] = (hdr >> 8) & 0xff;
+    tx[1] = hdr & 0xff;
     
-    // TODO formulate and send the cmnd pckt
-    header->_sbz1 = 0;
-    header->nbytes = 0;
-    header->isCmd = 1;
-    header->esp_From = (from & 0xf);
-    header->esp_To = (to & 0xf);
-
+    // 2. fill in total size, cmd, checksum
     uint32_t checksum = fast_hash32(bytes, nbytes);
-    header->cksum = checksum;
-    header->cmnd = cmd;
-    header->size = nbytes;
-    // shouldn't need to zero out _sbz padding again?
+    tx[2] = (nbytes >> 24) & 0xff;
+    tx[3] = (nbytes >> 16) & 0xff;
+    tx[4] = (nbytes >> 8) & 0xff;
+    tx[5] = nbytes & 0xff;
+    tx[6] = cmd;
+    tx[7] = (checksum >> 24) & 0xff;
+    tx[8] = (checksum >> 16) & 0xff;
+    tx[9] = (checksum >> 8) & 0xff;
+    tx[10] = checksum & 0xff;
 
-    // send the command!
-    sw_uart_putPckt(u, header);
-
-    // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
-    uint32_t bytes_left = nbytes;
-    void *data = bytes;
+    // 3. figure out how many data packets we need to send before firing off cmd
+    // nbytes might not be a mult of 30 (32 - HEADER_SIZE)
+    uint32_t rem = nbytes % 30;
+    uint32_t npackets = (nbytes/30) + rem;
     
-    while (bytes_left) {
-        // Create data packet header
-        uint8_t send_size = bytes_left >= 30 ? 30 : bytes_left % 30;
-        esp_pckt_t *pckt = kmalloc(sizeof(esp_pckt));
-        pckt->_sbz1 = 0;
-        pckt->nbytes = send_size;
-        pckt->isCmd = 0;    // this is a data packet!
-        pckt->esp_From = (from & 0xf);
-        pckt->esp_To = (to & 0xf);
-        // Write a portion of data bytes to this packet
-        memcpy(pckt->data, data, send_size);
-        // send the data packet!
-        sw_uart_putPckt(u, pckt);
-        // update vars so we get next chunk of data
-        bytes_left -= send_size;
-        data += send_size;
-        
-    }
-     
-    //TODO wait on a timeout for an ack back from the pi.
-    // can use a get32B cmnd and idk a timeout of like 1/2 second to start
-    //
-    // - eventually this would look like us having a fd that we can read from and 
-    // not having to busy wait here. 
-    
-    //TODO if ack recieved then return 1,
-    //If No-ACK or timeout then resend from the top, probably keep retrans counter and 
-    //eventually return -1 if the retrans maxes out. (this could be like a pi disconnected all of a sudden)
-    return 1;    
+    // 4. send cmd packet!
+    sw_uart_putk(uart, tx);
 }
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
