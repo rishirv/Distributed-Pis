@@ -19,22 +19,34 @@ void notmain(void) {
     /*
     // use pin 14 for tx, 15 for rx*/
     sw_uart_t u = sw_uart_init(23,21, 9600);
+
+    char* buff = kmalloc(sizeof(char) * 32);
     
     // Test that you can send the following command with no data
     send_cmd(&u, ESP_ACK,0b1010,0b1111,NULL,0);
 
-    if (sw_uart_get32B(&u,5000000, buff) == -1){
-        printk("Uh oh Seems we timed out\n");
-    } 
+    int i = sw_uart_get32B(&u,5000000, buff);
+    printk("Uh oh Seems we timed out on i = %d\n", i);
+     
+    esp_cmnd_pckt_t * pkt = (esp_cmnd_pckt_t *) buff;
 
-    // clearing the buffer
-    memset((char *)buff, 0, 32);
-
-    sw_uart_putk(&u,"qrstuvwxyzabcdefabcdefghijklmnop");
-    if (sw_uart_get32B(&u,5000000,buff) == -1){
-        printk("We timed out when expected, should wait about 5 seconds (i think)");
+    if (pkt->isCmd) {
+      printk("isCmnd checks out\n");
     }
+
     
-   send_cmd(&u,0b1111,0b1010,0b1010,"HELLO WORLD FROM PI HERE IS SOME PACKETS ITS GONNA BE A LOT SO JUST HANG IN THERE",82);
-   trace("TRACE: done!\n");
+    send_cmd(&u,0b1111,0b1010,0b1010,"HELLO WORLD FROM PI HERE IS SOME PACKETS ITS GONNA BE A LOT SO JUST HANG IN THERE",82);
+    if (pkt->cmnd == 0b1000){
+      printk("command checks out\n");
+    }
+    if (pkt->esp_To == 0b1010){
+      printk("TO checks out\n");
+    }
+    if (pkt->esp_From == 0b1111){
+      printk("FROM checks out\n");
+    }
+    if (pkt->cksum == 0xffffffff) {
+      printk("cksum checks out\n");
+    }
+    trace("TRACE: done!\n");
 }

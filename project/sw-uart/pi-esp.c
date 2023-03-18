@@ -17,6 +17,17 @@ enum {
     ESP_NOACK               = 0b1001,
 };*/
 
+/* Prompt the esp to init itself as a station aka client in its setup
+Note: might not use, might just flash client code to dedicated client esps */
+uint8_t client_init(void) {
+    return 1;
+}
+
+/* Prompt the esp to init itself as an access point aka server in its setup
+Note: might not use, might just flash server code to dedicated server esp */
+uint8_t server_init(void) {
+    return 1;
+}
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
     Packet Headers (2 bytes) --> On every 32byte packet
