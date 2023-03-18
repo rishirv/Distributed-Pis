@@ -49,6 +49,9 @@ void notmain(void) {
   // sw_uart_put8(&u,0);
  //   uart_init();
  //
+  while(1){
+   sw_uart_put8(&u,'a');
+  }
    send_cmd(&u,0b1111,0b1010,0b1010,"HELLO WORLD FROM PI HERE IS SOME PACKETS ITS GONNA BE A LOT SO JUST HANG IN THERE",82);
     trace("TRACE: done!\n");
 }
