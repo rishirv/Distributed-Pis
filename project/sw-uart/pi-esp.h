@@ -1,5 +1,5 @@
 #include "rpi.h"
-#include "spi.h"
+#include "sw-uart.h"
 
 // need an enum for the instruction codes
 
@@ -8,6 +8,7 @@
 // will need a way to compute checksums
 
 #define HEADER_SIZE 2
+#define CMD_NBYTES 9 // we don't include 2-byte header in size of data in a packet
 
 enum { 
     ESP_CLIENT_INIT         = 0b0001,
@@ -29,7 +30,7 @@ typedef struct esp_pckt {
         esp_From:4,
         esp_To:4;
     uint8_t data[30];
-} esp_pckt;
+} esp_pckt_t;
 
 typedef struct esp_cmnd_pckt {
     uint16_t
@@ -42,7 +43,7 @@ typedef struct esp_cmnd_pckt {
     uint8_t cmnd;
     uint32_t size;
     uint8_t _sbz[21];
-} esp_cmnd_pckt;
+} esp_cmnd_pckt_t;
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
 uint8_t client_init(void);
@@ -71,7 +72,7 @@ uint8_t server_init(void);
     byte:    29 28 27 26  25  24 23 22 21 20 ... 0
              | totalsize |cmd| checksum  |        |
 */
-uint8_t send_cmd(uint8_t cmd, uint8_t to,uint8_t from, const void *data, uint32_t nbytes);
+uint8_t send_cmd( sw_uart_t* u, uint8_t cmd, uint8_t to,uint8_t from, const void *data, uint32_t nbytes);
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
 response or null if unsuccessful.*/

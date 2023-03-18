@@ -13,6 +13,7 @@ PROGS = hello.c
  #COMMON_SRC += sw-uart-veneer.c
 COMMON_SRC += sw-uart.c
 COMMON_SRC += pi-esp.c
+
 # can use the staff code to see that things work.
 # STAFF_OBJS := staff-sw-uart.o
 

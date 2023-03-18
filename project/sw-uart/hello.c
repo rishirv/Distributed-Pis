@@ -12,6 +12,7 @@ void notmain(void) {
 
     gpio_set_input(21);
     gpio_set_pullup(21);
+    //TODO change back to 23
     gpio_set_output(23);
     
     /*
@@ -44,8 +45,10 @@ void notmain(void) {
     
     
     //printk("we got from esp (expect empty) [%s]\n",buff);
-    send_cmd(ESP_ACK,0b1010,0b1111,NULL,0);
+   // send_cmd(ESP_ACK,0b1010,0b1111,"Hello World From Pi",0);
   // sw_uart_put8(&u,0);
  //   uart_init();
+ //
+   send_cmd(&u,0b1111,0b1010,0b1010,"HELLO WORLD FROM PI",20);
     trace("TRACE: done!\n");
 }
