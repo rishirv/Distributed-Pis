@@ -136,11 +136,17 @@ uint8_t receive_data_nbytes(void) {
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
 uint8_t connect_to_wifi(void) {
+    // Call send_cmd with ESP_WIFI_CONNECT
+    // If return == -1, update fd field with no_ack?
+    // otherwise, update fd field with ack?
     return 1;
 }
 
 // For Client: Returns whether or not this client pi's esp is connected to the server
 uint8_t is_connected(void) {
+    // Call send_cmd with ESP_IS_CONNECTED
+    // If return == -1, update fd field with no_ack
+    // otherwise, update fd field with ack 
     return 1;
 }
 
