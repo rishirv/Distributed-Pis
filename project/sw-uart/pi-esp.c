@@ -115,19 +115,11 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
         bytes_left -= send_size;
         data += send_size;
         curr_pkt++;
-        
-        /*trace("DATA nybtes = %d\n", pckts->nbytes);
-        trace("DATA isCmd = %d\n", pckts->isCmd);
-        trace("DATA from = %d, to = %d\n", pckts->esp_From, pckts->esp_To);*/
     }
 
     // compute checksum over all the data packets and their headers 
     uint32_t checksum = fast_hash32(pckts,sizeof(esp_pckt_t) * PKT_NBYTES);
     header->cksum = checksum;
-
-    for (int i = 0; i < 21; i++) {
-        trace("CMD sbz[%d] = %d\n", i, (header->_sbz)[i]);
-    }
 
     // send the command packet!
     sw_uart_putPckt(u, header);

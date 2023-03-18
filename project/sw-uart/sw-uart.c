@@ -84,7 +84,7 @@ int sw_uart_get32B(sw_uart_t* uart, uint32_t timeout_usec, uint8_t* buff){
         if (succ == -1) return i;
         buff[i] = (char)succ;
     }
-    return 1;
+    return 33;
 }
 // do this second: you can type in pi-cat to send stuff.
 //      EASY BUG: if you are reading input, but you do not get here in 
