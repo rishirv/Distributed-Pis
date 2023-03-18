@@ -18,13 +18,32 @@ void notmain(void) {
     /*
     // use pin 14 for tx, 15 for rx*/
     sw_uart_t u = sw_uart_init(23,21, 9600);
+
+    char* buff = kmalloc(sizeof(char) * 32);
     
     // Test that you can send the following command with no data
     send_cmd(&u, ESP_ACK,0b1010,0b1111,NULL,0);
 
-    if (sw_uart_get32B(&u,5000000, buff) == -1){
-        printk("Uh oh Seems we timed out\n");
-    } 
-    printk("we got from esp [%s]\n",buff);
+    int i = sw_uart_get32B(&u,5000000, buff);
+    printk("Uh oh Seems we timed out on i = %d\n", i);
+     
+    esp_cmnd_pckt_t * pkt = (esp_cmnd_pckt_t *) buff;
+
+    if (pkt->isCmd) {
+      printk("isCmnd checks out\n");
+    }
+    if (pkt->cmnd == 0b1000){
+      printk("command checks out\n");
+    }
+    if (pkt->esp_To == 0b1010){
+      printk("TO checks out\n");
+    }
+    if (pkt->esp_From == 0b1111){
+      printk("FROM checks out\n");
+    }
+    if (pkt->cksum == 0xffffffff) {
+      printk("cksum checks out\n");
+    }
+    //printk("we got from esp [%s]\n",buff);
     trace("TRACE: done!\n");
 }

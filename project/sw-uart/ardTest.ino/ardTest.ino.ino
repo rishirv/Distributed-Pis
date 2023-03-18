@@ -42,10 +42,14 @@ void loop() {
     char buff[32];
     for (int i =0; i < 32; i++){
       buff[i] = mySerial.read();
+    }:
+    int nbytes = 0;
+    for (int i = 0; i < 32; i++) {
+      nbytes += mySerial.write(buff[i]);
     }
-    mySerial.print("got some stuff!");
     esp_cmnd_pckt * pkt = (esp_cmnd_pckt*) buff;
-
+    Serial.printf("bytes sent %d\n", nbytes);
+    
     if (pkt->isCmd) {
       Serial.println("isCmnd checks out\n");
     }
@@ -57,6 +61,9 @@ void loop() {
     }
     if (pkt->esp_From == 0b1111){
       Serial.println("FROM checks out\n");
+    }
+    if (pkt->cksum == 0xffffffff) {
+      Serial.println("Checksum checks out!\n");
     }
     Serial.println(buff);
   }

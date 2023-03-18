@@ -8,6 +8,7 @@
 // will need a way to compute checksums
 
 #define HEADER_SIZE 2
+#define CMD_NBYTES 9 // we don't include 2-byte header in size of data in a packet
 
 enum { 
     ESP_CLIENT_INIT         = 0b0001,

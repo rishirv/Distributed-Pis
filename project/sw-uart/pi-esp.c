@@ -23,7 +23,6 @@ enum {
     ESP_NOACK               = 0b1001,
 };*/
 
-uint8_t spi_chip = 0; // just use chip 0 always
 
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
@@ -68,13 +67,14 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const vo
     
     // Build the command packet header
     header->_sbz1 = 0;
-    header->nbytes = 0;
+    header->nbytes = CMD_NBYTES;
     header->isCmd = 1;
     header->esp_From = (from & 0xf);
     header->esp_To = (to & 0xf);
-
-    uint32_t checksum = fast_hash32(bytes, nbytes);
-    header->cksum = checksum;
+    
+    // TODO: change this to compute a checksum of all the packets and their headers
+    //uint32_t checksum = fast_hash32(bytes, nbytes);
+    header->cksum = 0xffffffff;
     header->cmnd = cmd;
     header->size = nbytes;
     // shouldn't need to zero out _sbz padding again?
@@ -90,7 +90,8 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const vo
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;
     char *data = (char *)bytes;
-    
+   
+    // TODO: create all the data packets, store in an array, get cksum of that, THEN send! 
     while (bytes_left) {
         // Create data packet header
         uint8_t send_size = bytes_left >= 30 ? 30 : bytes_left % 30;
