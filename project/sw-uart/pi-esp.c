@@ -80,7 +80,8 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     uint32_t npckts = (nbytes/DATA_NBYTES) + ((nbytes % DATA_NBYTES) > 0);
     
     esp_pckt_t *pckts = NULL;
-    if (npckts) pckts = kmalloc(sizeof(esp_pckt_t) * PKT_NBYTES); 
+    if (npckts) 
+        pckts = kmalloc(sizeof(esp_pckt_t) * npckts); 
    
     // create all the data packets, store in an array, get cksum of that, THEN send!
     int curr_pkt = 0;

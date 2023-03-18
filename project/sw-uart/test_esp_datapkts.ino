@@ -90,10 +90,10 @@ void loop() {
     if (data_pkt->nbytes == 30) {
       Serial.println("DATA: nbytes checks out\n");      
     }
-    if (cmd_pkt->esp_To == 0b1010){
+    if (data_pkt->esp_To == 0b1010){
       Serial.println("DATA: TO checks out\n");
     }
-    if (cmd_pkt->esp_From == 0b1111){
+    if (data_pkt->esp_From == 0b1111){
       Serial.println("DATA: FROM checks out\n");
     }
     //Serial.println();
