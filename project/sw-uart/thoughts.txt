@@ -1,0 +1,5 @@
+Ooooookay we need some more stuff on the esp: 
+
+A. we need to figure out a list to keep on the server ... more or less we need to keep a list of connections.. not sure how that rolls 
+
+B. Need to write code to grab data from server/client on esp and send to pi.... shit hows that gonna go? ... Okay lazy sending: we can assume reliable transfers btwn esps, so literally just buffer up 32 and send it. 
