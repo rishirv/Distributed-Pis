@@ -56,24 +56,24 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     // first check to make sure we have a valid cmd - make sure to malloc it
     esp_cmnd_pckt_t *header = kmalloc(sizeof(esp_cmnd_pckt_t));
     // zero out everything then set fields
-    memset((char *)header, 0, sizeof(esp_cmnd_pckt_t));
-    
+    memset(header, 0, 32);
     // Build the command packet header
-    header->_sbz1 = 0b00;
+    header->_sbz1 = 0;
     header->nbytes = CMD_NBYTES;
-    header->isCmd = 0b1;
+    header->isCmd = 1;
     header->esp_From = (from & 0xf);
     header->esp_To = (to & 0xf);
     // get checksum AFTER gathering all the data packets 
     header->cmnd = cmd;
     header->size = nbytes;
-    // shouldn't need to zero out _sbz padding again?
-    //header->_sbz[14] = 0xa;
-    // For sanity checking
-    /*trace("from = %d, to = %d\n", header->esp_From, header->esp_To);
-    trace("checksum = %x\n", header->cksum);
-    trace("cmnd = %d\n", header->cmnd);*/
-    
+
+    //For sanity checking
+    trace("CMD nybtes = %d\n", header->nbytes);
+    trace("CMD isCmd = %d\n", header->isCmd);
+    trace("CMD from = %d, to = %d\n", header->esp_From, header->esp_To);
+    trace("CMD cmnd = %d\n", header->cmnd);
+    trace("CMD size = %d\n", header->size);
+
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;
     char *data = (char *)bytes;
@@ -155,3 +155,5 @@ uint8_t is_connected(void) {
 uint8_t *get_connected(void) {
     return NULL;
 }
+
+

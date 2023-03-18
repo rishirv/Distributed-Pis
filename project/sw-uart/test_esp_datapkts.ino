@@ -45,8 +45,7 @@ void setup() {
 // Test that we can receive a simple command and 1 data packet
 // send_cmd(&u,ESP_ACK, 0B1010, 0B111, data, 30)
 void loop() {
-  
-  if (mySerial.available() == 64){
+  if (mySerial.available()){
     Serial.println("got some bytes!\n");
     //Serial.println("seen something at leas");
     char cmd[32], data[32];
@@ -96,6 +95,5 @@ void loop() {
     if (data_pkt->esp_From == 0b1111){
       Serial.println("DATA: FROM checks out\n");
     }
-    //Serial.println();
   }
 }

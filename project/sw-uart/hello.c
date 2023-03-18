@@ -22,31 +22,7 @@ void notmain(void) {
 
     char* buff = kmalloc(sizeof(char) * 32);
     
-    // Test that you can send the following command with no data
-    send_cmd(&u, ESP_ACK,0b1010,0b1111,NULL,0);
-
-    int i = sw_uart_get32B(&u,5000000, buff);
-    printk("Uh oh Seems we timed out on i = %d\n", i);
-     
-    esp_cmnd_pckt_t * pkt = (esp_cmnd_pckt_t *) buff;
-
-    if (pkt->isCmd) {
-      printk("isCmnd checks out\n");
-    }
-
-    
     send_cmd(&u,0b1111,0b1010,0b1010,"HELLO WORLD FROM PI HERE IS SOME PACKETS ITS GONNA BE A LOT SO JUST HANG IN THERE",82);
-    if (pkt->cmnd == 0b1000){
-      printk("command checks out\n");
-    }
-    if (pkt->esp_To == 0b1010){
-      printk("TO checks out\n");
-    }
-    if (pkt->esp_From == 0b1111){
-      printk("FROM checks out\n");
-    }
-    if (pkt->cksum == 0xffffffff) {
-      printk("cksum checks out\n");
-    }
+
     trace("TRACE: done!\n");
 }
