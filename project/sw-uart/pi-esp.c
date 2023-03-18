@@ -50,8 +50,8 @@ uint8_t server_init(void) {
 
     Top 2 bytes of 32 byte packet:
 
-    bits:    15 14 13 12 11   10  9 8 7 6 5 4 3 2 1 0
-             | nbytes      |isCmd| from  | to    |sbz|
+    bits:    15 14 13 12 11 10 9   8   7 6 5 4 3 2 1 0
+             | sbz |   nbytes   |isCmd| from  |  to   |
     byte:               31                 30
 
     Remaining bytes 29-0 are either data or the following if a command packet:
@@ -71,10 +71,7 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const vo
     header->isCmd = 1;
     header->esp_From = (from & 0xf);
     header->esp_To = (to & 0xf);
-    
-    // TODO: change this to compute a checksum of all the packets and their headers
-    //uint32_t checksum = fast_hash32(bytes, nbytes);
-    header->cksum = 0xffffffff;
+    // get checksum AFTER gathering all the data packets 
     header->cmnd = cmd;
     header->size = nbytes;
     // shouldn't need to zero out _sbz padding again?
@@ -84,33 +81,48 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint32_t to, uint32_t from, const vo
     trace("checksum = %x\n", header->cksum);
     trace("cmnd = %d\n", header->cmnd);*/
     
-    // send the packet!
-    sw_uart_putPckt(u, header);
-
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;
     char *data = (char *)bytes;
+    uint32_t npckts = (nbytes/DATA_NBYTES) + ((nbytes % DATA_NBYTES) > 0);
+    
+    esp_pckt_t *pckts = NULL;
+    if (npckts) pckts = kmalloc(sizeof(esp_pckt_t) * PKT_NBYTES); 
    
-    // TODO: create all the data packets, store in an array, get cksum of that, THEN send! 
+    // create all the data packets, store in an array, get cksum of that, THEN send!
+    int curr_pkt = 0;
     while (bytes_left) {
         // Create data packet header
         uint8_t send_size = bytes_left >= 30 ? 30 : bytes_left % 30;
-        esp_pckt_t *pckt = kmalloc(sizeof(esp_pckt_t));
-        pckt->_sbz = 0;
-        pckt->nbytes = send_size;
-        pckt->isCmd = 0;    // this is a data packet!
-        pckt->esp_From = (from & 0xf);
-        pckt->esp_To = (to & 0xf);
+        esp_pckt_t pckt = {
+            ._sbz = 0,
+            .nbytes = send_size,
+            .isCmd = 0,    // this is a data packet!
+            .esp_From = (from & 0xf),
+            .esp_To = (to & 0xf),
+        };
         // Write a portion of data bytes to this packet
-        memcpy(pckt->data, data, send_size);
-        // send the data packet!
-        sw_uart_putPckt(u, pckt);
+        memcpy(pckt.data, data, send_size);
+        // store data packet in pckts array to send later
+        pckts[curr_pkt] = pckt; 
         // update vars so we get next chunk of data
         bytes_left -= send_size;
         data += send_size;
-        
+        curr_pkt++;
     }
-     
+
+    // compute checksum over all the data packets and their headers 
+    uint32_t checksum = fast_hash32(pckts,sizeof(esp_pckt_t) * PKT_NBYTES);
+    header->cksum = checksum;
+
+    // send the command packet!
+    sw_uart_putPckt(u, header);
+
+    // Now send all the data packets one by one
+    for (int i = 0; i < npckts; i++)  {
+        sw_uart_putPckt(u, &pckts[i]);
+    }
+
     //TODO wait on a timeout for an ack back from the pi.
     // can use a get32B cmnd and idk a timeout of like 1/2 second to start
     //

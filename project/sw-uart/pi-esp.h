@@ -9,6 +9,8 @@
 
 #define HEADER_SIZE 2
 #define CMD_NBYTES 9 // we don't include 2-byte header in size of data in a packet
+#define DATA_NBYTES 30 // data packets can hold a max of 30 bytes of data after header
+#define PKT_NBYTES 32
 
 enum { 
     ESP_CLIENT_INIT         = 0b0001,
