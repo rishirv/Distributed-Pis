@@ -25,22 +25,22 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     // first check to make sure we have a valid cmd - make sure to malloc it
     esp_cmnd_pckt_t *header = kmalloc(sizeof(esp_cmnd_pckt_t));
     // zero out everything then set fields
-    memset((char *)header, 0, 32);
+    memset((char *)header, 0, sizeof(esp_cmnd_pckt_t));
     
     // Build the command packet header
-    header->_sbz1 = 0;
+    header->_sbz1 = 0b00;
     header->nbytes = CMD_NBYTES;
-    header->isCmd = 1;
+    header->isCmd = 0b1;
     header->esp_From = (from & 0xf);
     header->esp_To = (to & 0xf);
     
     // TODO: change this to compute a checksum of all the packets and their headers
     //uint32_t checksum = fast_hash32(bytes, nbytes);
-    header->cksum = 0xffffffff;
-    header->cmnd = cmd;
+    header->cksum =  0xffffffff;
+    header->cmnd = 0xa;
     header->size = nbytes;
     // shouldn't need to zero out _sbz padding again?
-
+    //header->_sbz[14] = 0xa;
     // For sanity checking
     /*trace("from = %d, to = %d\n", header->esp_From, header->esp_To);
     trace("checksum = %x\n", header->cksum);

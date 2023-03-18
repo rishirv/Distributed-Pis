@@ -2,4 +2,11 @@ Ooooookay we need some more stuff on the esp:
 
 A. we need to figure out a list to keep on the server ... more or less we need to keep a list of connections.. not sure how that rolls 
 
-B. Need to write code to grab data from server/client on esp and send to pi.... shit hows that gonna go? ... Okay lazy sending: we can assume reliable transfers btwn esps, so literally just buffer up 32 and send it. 
+B. Need to write code to grab data from server/client on esp and send to pi.... shit hows that gonna go? ... Okay lazy sending: we can assume reliable transfers btwn esps, so literally just buffer up 32 and send it. dunno how much we can buffer but itll be alright. 
+C. need to make a connect to wifi one
+
+D. Need to make one to actually send the commmand, just makes sure its connected first or handles the resulting fail. 
+
+E. Make a switch case for the commands on the esp side. 
+
+F Basically write all the recieve end on the pi. 

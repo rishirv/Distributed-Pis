@@ -42,7 +42,7 @@ typedef struct esp_cmnd_pckt {
     uint32_t cksum;
     uint8_t cmnd;
     uint32_t size;
-    uint8_t _sbz[21];
+    uint8_t _sbz[13];
 } esp_cmnd_pckt_t;
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */

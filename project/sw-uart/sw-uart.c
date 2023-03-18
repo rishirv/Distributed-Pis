@@ -17,11 +17,6 @@ void sw_uart_putk(sw_uart_t *uart, const char *msg) {
 }
 
 void sw_uart_putPckt(sw_uart_t *uart, void *msg) {
-    esp_pckt_t* pckt = (esp_pckt_t*)msg;
-    printk("about to print packet\n");
-    for(int i = 0; i < 30; i++){
-        printk("%c",pckt->data[i]);
-    }
     char* msgC = (char *)msg;
     for(int i = 0; i < 32; i++)
         sw_uart_put8(uart, msgC[i]);
