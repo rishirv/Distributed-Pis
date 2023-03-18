@@ -84,10 +84,10 @@ for (int i = 0; i < strlen(msg); i++){
   }
   yield();
 
-  //while(client.available() > 0){
+  while(client.available()){
+    Serial.print("CLIENT AVAILABLE");
     char c = client.read();
     Serial.print(c);    
   }
-  client.stop();
-    
+  client.stop();   
 }
