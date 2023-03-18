@@ -46,7 +46,7 @@ void setup() {
 // send_cmd(&u,ESP_ACK, 0B1010, 0B111, data, 30)
 void loop() {
   
-  if (mySerial.available() == 64){
+  if (mySerial.available()){
     Serial.println("got some bytes!\n");
     //Serial.println("seen something at leas");
     char cmd[32], data[32];
@@ -56,11 +56,12 @@ void loop() {
     for (int i =0; i < 32; i++){
       data[i] = mySerial.read();
     }
-    delay(100);
+    //delay(100);
     int nbytes = 0;
     for (int i = 0; i < 32; i++) {
       nbytes += mySerial.write(cmd[i]);
     }
+    delay(100);
     for (int i = 0; i < 32; i++) {
       nbytes += mySerial.write(data[i]);
     }
@@ -90,10 +91,10 @@ void loop() {
     if (data_pkt->nbytes == 30) {
       Serial.println("DATA: nbytes checks out\n");      
     }
-    if (cmd_pkt->esp_To == 0b1010){
+    if (data_pkt->esp_To == 0b1010){
       Serial.println("DATA: TO checks out\n");
     }
-    if (cmd_pkt->esp_From == 0b1111){
+    if (data_pkt->esp_From == 0b1111){
       Serial.println("DATA: FROM checks out\n");
     }
     //Serial.println();
