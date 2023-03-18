@@ -27,6 +27,7 @@ void setup() {
 
  Serial.print("Connected to WiFi. IP:");
   Serial.println(WiFi.localIP());
+   
 
   // set up mdns
 if (!MDNS.begin("poop")) {             // Start the mDNS responder
@@ -62,7 +63,7 @@ int n = MDNS.queryService("poop", "lab"); // Send out query for esp tcp services
 
 void loop() {
   // put your main code here, to run repeatedly:
- MDNS.update();
+    MDNS.update();
 
 int n = MDNS.queryService("poop", "lab");
 if (n > 0){
@@ -73,21 +74,12 @@ if (n > 0){
       return;
     }
   }  
-}else return;
+ }else return;
+// writing to the server supposedl
 
-//Serial.println("connected");
-
-// writing to the server supposedly
-char msg[15] = "Hello World";
-for (int i = 0; i < strlen(msg); i++){
-    client.write(msg[i]);
-  }
-  yield();
-
-  //while(client.available() > 0){
+    if(client.available()){    
     char c = client.read();
-    Serial.print(c);    
-  }
-  client.stop();
+    Serial.println(c);    }
+
     
 }
