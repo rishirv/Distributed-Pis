@@ -56,12 +56,11 @@ void loop() {
     for (int i =0; i < 32; i++){
       data[i] = mySerial.read();
     }
-    //delay(100);
+    delay(100);
     int nbytes = 0;
     for (int i = 0; i < 32; i++) {
       nbytes += mySerial.write(cmd[i]);
     }
-    delay(100);
     for (int i = 0; i < 32; i++) {
       nbytes += mySerial.write(data[i]);
     }
@@ -97,6 +96,5 @@ void loop() {
     if (data_pkt->esp_From == 0b1111){
       Serial.println("DATA: FROM checks out\n");
     }
-    //Serial.println();
   }
 }

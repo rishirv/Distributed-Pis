@@ -19,18 +19,10 @@ void notmain(void) {
     // use pin 14 for tx, 15 for rx*/
     sw_uart_t u = sw_uart_init(23,21, 9600);
 
-    //char* cmd = kmalloc(sizeof(char) * 32);
-
-    //uint8_t* data = kmalloc(sizeof(uint8_t) * 32);
-
-    //uint8_t* send  = kmalloc(sizeof(uint8_t) * 30);
-    //char *value = "abcdefghijklmnopqrstuvwxyzabc";
-    //memcpy(send, value, 30);
-    
     // Test that you can send some command and 1 data packet
     send_cmd(&u, ESP_ACK, 0b1010, 0b1111, "abcdefghijklmnopqrstuvwxyzabc", 30);
 
-    /*int i = sw_uart_get32B(&u,5000000, cmd);
+    int i = sw_uart_get32B(&u,5000000, cmd);
     if (i != 33) {
         printk("Uh oh Seems we timed out on cmd byte i = %d\n", i);
     }
@@ -71,10 +63,8 @@ void notmain(void) {
     if (data_pkt->esp_From == 0b1111){
       printk("DATA: FROM checks out\n");
     }
-    //printk("we got cmd = [%s]\n",cmd);
-    //printk("we got data = [%s]\n", data);
     for (int i = 2; i < 32; i++) {
         printk("%c", data[i]);
-    }*/
+    }
     trace("TRACE: done!\n");
 }

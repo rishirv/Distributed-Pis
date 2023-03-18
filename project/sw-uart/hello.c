@@ -23,5 +23,6 @@ void notmain(void) {
     char* buff = kmalloc(sizeof(char) * 32);
     
     send_cmd(&u,0b1111,0b1010,0b1010,"HELLO WORLD FROM PI HERE IS SOME PACKETS ITS GONNA BE A LOT SO JUST HANG IN THERE",82);
+
     trace("TRACE: done!\n");
 }
