@@ -5,6 +5,8 @@
 #include <ESP8266mDNS.h>
 //server configured to listen on port 1001
 WiFiServer server(1001);
+WiFiClient client;
+
 
 void setup() {
   
@@ -22,7 +24,7 @@ Serial.println("starting");
 
 // now setup a wifi server to listen on a port. 
 server.begin();
-
+client = server.available();
   // then set up mdns 
 if (!MDNS.begin("poop")) {             // Start the mDNS responder for esp8266.local
     Serial.println("Error setting up MDNS responder!");
@@ -57,8 +59,20 @@ int n = MDNS.queryService("poop", "lab"); // Send out query for services
 void loop() {
   int n = 0;
   MDNS.update();
-WiFiClient client = server.available(); // returns either a false value or a client with data ready to read. 
-if (client) {
+WiFiClient clientLocal = server.available(); // returns either a false value or a client with data ready to read. 
+if(clientLocal) {
+  Serial.println("added client");
+  client = clientLocal;
+}
+if(client){
+  Serial.println("writing");
+  client.write("argh");
+}
+
+
+
+
+/*if (0) {
     Serial.println("wohoo got a connection");
     int avail = client.available();
     while(client.connected()){
@@ -66,9 +80,9 @@ if (client) {
       if(avail> 0){  
         char c = client.read();
         Serial.print(c);  
-        client.write(c); 
+        client.write('a'); 
         }  
       }
       yield();      
-    }
+    }*/
 }

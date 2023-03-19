@@ -4,12 +4,6 @@
 #include "pi-esp.h"
 #include "fast-hash32.h"
 
-// need an enum for the instruction codes
-
-// need to figure out how we represent to/from
-
-// will need a way to compute checksums
-
 /* Commands encoded like so:
 enum { 
     ESP_CLIENT_INIT         = 0b0001,
@@ -22,7 +16,6 @@ enum {
     ESP_ACK                 = 0b1000,
     ESP_NOACK               = 0b1001,
 };*/
-
 
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
@@ -81,14 +74,14 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     trace("CMD cmnd = %d\n", header->cmnd);
     trace("CMD size = %d\n", header->size);
 
-    
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;
     char *data = (char *)bytes;
     uint32_t npckts = (nbytes/DATA_NBYTES) + ((nbytes % DATA_NBYTES) > 0);
     
     esp_pckt_t *pckts = NULL;
-    if (npckts) pckts = kmalloc(sizeof(esp_pckt_t) * npckts); 
+    if (npckts) 
+        pckts = kmalloc(sizeof(esp_pckt_t) * npckts); 
    
     // create all the data packets, store in an array, get cksum of that, THEN send!
     int curr_pkt = 0;
@@ -133,7 +126,7 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     //TODO if ack recieved then return 1,
     //If No-ACK or timeout then resend from the top, probably keep retrans counter and 
     //eventually return -1 if the retrans maxes out. (this could be like a pi disconnected all of a sudden)
-    return 1;    
+    return 1; 
 }
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
@@ -144,11 +137,17 @@ uint8_t receive_data_nbytes(void) {
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
 uint8_t connect_to_wifi(void) {
+    // Call send_cmd with ESP_WIFI_CONNECT
+    // If return == -1, update fd field with no_ack?
+    // otherwise, update fd field with ack?
     return 1;
 }
 
 // For Client: Returns whether or not this client pi's esp is connected to the server
 uint8_t is_connected(void) {
+    // Call send_cmd with ESP_IS_CONNECTED
+    // If return == -1, update fd field with no_ack
+    // otherwise, update fd field with ack 
     return 1;
 }
 
@@ -156,3 +155,5 @@ uint8_t is_connected(void) {
 uint8_t *get_connected(void) {
     return NULL;
 }
+
+

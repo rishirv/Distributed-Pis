@@ -19,6 +19,10 @@ void notmain(void) {
     // use pin 14 for tx, 15 for rx*/
     sw_uart_t u = sw_uart_init(23,21, 9600);
 
+    char* cmd = kmalloc(sizeof(char) * 32);
+
+    uint8_t* data = kmalloc(sizeof(uint8_t) * 32);
+
     // Test that you can send some command and 1 data packet
     send_cmd(&u, ESP_ACK, 0b1010, 0b1111, "abcdefghijklmnopqrstuvwxyzabc", 30);
 
