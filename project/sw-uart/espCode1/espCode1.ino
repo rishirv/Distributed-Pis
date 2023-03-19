@@ -176,7 +176,7 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(mySerial.available());
+  //Serial.println(mySerial.available());
   if(from_pi->runRdy) return runCmnd();
   if(mySerial.available() > 31) return parseNreadPckt();
 
