@@ -41,8 +41,7 @@ typedef struct pi_buff{
 // eventually this should be an array of these structs.
 pi_buff* from_pi = (pi_buff*)malloc(sizeof(pi_buff));
 
-// okay just ignore this long stream of shit for a minute. it is just sending a hardcoded
-// set of packets, hardcoded for my own sanity lol
+//TODO eventually take in which pi we are writing the message to, leave be for now. 
 void write_msg_pi(){
   esp_cmnd_pckt cmd_pckt;
   memset(&cmd_pckt,0,32);
