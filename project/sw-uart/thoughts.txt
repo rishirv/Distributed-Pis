@@ -10,3 +10,16 @@ D. Need to make one to actually send the commmand, just makes sure its connected
 E. Make a switch case for the commands on the esp side. 
 
 F Basically write all the recieve end on the pi. 
+
+
+
+
+##############################################################
+Okay next level
+
+Add interrupts: 
+
+scan the interrupts from my thread scheduler
+pull over what is necessary to handle an IRQ 
+
+Go look at past code... do we have interrupts on falling edge anywhere? 

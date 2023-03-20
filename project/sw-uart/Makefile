@@ -13,9 +13,12 @@ PROGS = rec-test.c
 #PROGS = 1-getc-test.c
 #once your sw-uart works: add sw-uart-veneer.c
  #COMMON_SRC += sw-uart-veneer.c
+COMMON_SRC += interrupts-c.c
+COMMON_SRC += interrupts-asm.S
 COMMON_SRC += sw-uart.c
 COMMON_SRC += pi-esp.c
 COMMON_SRC += fds.c 
+COMMON_SRC += gpio-int.c
 # can use the staff code to see that things work.
 # STAFF_OBJS := staff-sw-uart.o
 

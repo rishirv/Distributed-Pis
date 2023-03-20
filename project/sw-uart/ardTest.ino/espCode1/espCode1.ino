@@ -64,28 +64,38 @@ void write_msg_pi(){
   for(int i = 0; i < 30; i++){
     data.data[i] = st[i];
   } 
-
+/*
   esp_cmnd_pckt* cmd_pp= &cmd_pckt;
   char* cmd_p = (char*)cmd_pp;
+  //mySerial.print(0);
+  mySerial.print(0);
   for(int i = 0; i <32;i++){
     mySerial.print(cmd_p[i]);
   }
   /*
   for(int i = 0; i < 32; i++){
     mySerial.print(cmd_p[i]);
-  }*/
+  }
   int k = 0;
   while(k < 100000){
     yield();
     k++;
-  }
+  }*/
 
   esp_pckt* data_pp = &data;
-  char* data_p = (char*)data_pp;
+  char* data_p = (char*)data_pp;  
+  //mySerial.print(0);
+  digitalWrite(txPin,LOW);
+
+  //delay
+  /*for(int i = 0; i < 1; i++){
+    yield();
+  }*/
+  digitalWrite(txPin,HIGH);
   for (int i =0; i< 32; i++){
     mySerial.print(data_p[i]);
   }
-
+/*
   char tt[6] = "yargh";
   for(int i = 0; i < 6; i++){
     data.data[i] = tt[i];
@@ -97,7 +107,7 @@ void write_msg_pi(){
   }
    for (int i =0; i< 32; i++){
     mySerial.print(data_p[i]);
-  }
+  }*/
   /*
   for(int i = 0; i < 32; i++){
     mySerial.write(buff[i]);
@@ -244,7 +254,7 @@ void loop() {
   //Serial.println(mySerial.available());
   if(from_pi->runRdy) return runCmnd();
   if(mySerial.available() > 31) return parseNreadPckt();
-  if(i%1000000 == 0){
+  if(i%500000 == 0){
     Serial.println("writing message");
   write_msg_pi();
   }

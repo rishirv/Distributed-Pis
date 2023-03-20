@@ -1,7 +1,8 @@
 #include "rpi.h"
 #include "constants.h"
 #include "pi-esp.h"
-
+#include "cycle-count.h"
+#include "cycle-util.h"
 // TODO should wrap most of our defines in these so we avoid redefinition hell
 #ifndef __FDS_H__
     #include "fds.h"
@@ -103,14 +104,62 @@ int add_msg(fd* fds){
 
 // we just clear current message on a return;
 void recieveMsgHandler(){
+  //  printk("got into handler\n");
+    // TODO hardcoded fix later
+    //printk("in handler,tx: %d",u->tx);
     // read msg
     char* buff = kmalloc(sizeof(esp_cmnd_pckt_t));
+    int bytesRead = 0;
+    int timeout_usec = 500000;
+    for (int i = 0; i< 32; i++, bytesRead++){
+//        int succ = sw_uart_get8_timeout(uart,timeout_usec);
+        int c = 0;
+        // start a timeout timer
+        uint32_t timer_st = timer_get_usec();
+        // normally high will start reading once it goes low
+        while(!gpio_read(u->rx) && (timer_get_usec() - timer_st) < timeout_usec);
+        while(gpio_read(u->rx) && (timer_get_usec() - timer_st) < timeout_usec);
+        // if we fell through due to timeout then we return a -1
+        if (timer_get_usec() - timer_st > timeout_usec) {
+            c = -1;
+            break;}
 
-    // timeout at 1, see if this is too slow. seems slow to me for an interrupt but not much to be done rn. 
-    int succ = sw_uart_get32B(u,5000,buff);
+        int start = cycle_cnt_read();
+        delay_ncycles(start,(u->cycle_per_bit) /2);
+        start += u->cycle_per_bit /2;
+    
+        delay_ncycles(start,(u->cycle_per_bit) );
+        start += u->cycle_per_bit;
+    
+        for(int i = 0; i <8; i++){
+            c |= gpio_read(u->rx) << i;
+            delay_ncycles(start,u->cycle_per_bit);
+            start += u->cycle_per_bit;
+        }
+        
+        //int succ = sw_uart_get8(uart);
+        if (c == -1) {
+            bytesRead = i;
+            break;
+        }
+
+        buff[i] = (char)c;
+    }
+
+    // timeout at 1, see if this is to slow. seems slow to me for an interrupt but not much to be done rn. 
+    //int succ = sw_uart_get32B(u,5000000,buff);
     // if we timeout then just return
-    if (succ < 33) return;
-    printk("got a message!\n");
+    if (bytesRead < 32) {
+    printk("failed: %d",bytesRead);
+    gpio_event_clear(21);
+    return;
+    }
+    printk("got a mesage");
+   // printk("got message\n");
+    gpio_event_clear(21);
+
+
+    //printk("got a message!\n");
     // cast to a pck_cmnd_strct 
     esp_cmnd_pckt_t* pckt = (esp_cmnd_pckt_t*)buff;
     
@@ -121,18 +170,19 @@ void recieveMsgHandler(){
         //place into special fd;
         //TODO 
         fds=NULL;
-        printk("special fds");
+        //printk("special fds");
     }else{
         //otherwise take the from field
         // get the fd (just index into the global fd table for now)
         // TODO
-      //  printk("got fds %x\n",pckt->esp_From);
+        printk("got fds %x\n",pckt->esp_From);
         fds= fileTable+pckt->esp_From;
-        printk("fds: %x\n",fds);
+        //printk("fds: %x\n",fds);
     }
     
 
     msg_t* msg = fds->cur_msg;
+    msg->data = kmalloc(sizeof(char)* 64);
     // now parse the packet: is is a cmnd? 
       if(pckt->isCmd){
           //  If so is it an ACK/NOACK? : then change status line and return
@@ -165,26 +215,28 @@ void recieveMsgHandler(){
         // prepare the buffer for the message, not mallocing for headers: we strip those! 
         //msg->data = kmalloc(sizeof(char)* pckt->size);
         msg->data = kmalloc(sizeof(char)* 64);
-        //printk("succesfull return from cmnd msg\n");
+     //   printk("succesfull return from cmnd msg\n");
         // okay we got it all we can return;
         return; 
     }else{
-        printk("message is data\n");
+       // printk("message is data\n");
        //data packet
        esp_pckt_t* data_pckt = (esp_pckt_t*)pckt;
-        printk("msg: %s\n",data_pckt->data);
+     //   printk("msg: [%s]\n",data_pckt->data);
        // nothing to really do here besides shove it onto the buffer! 
        memcpy(msg->data + (30*msg->curPckts),data_pckt->data,30);
        msg->curPckts ++;
     }
-    
+      printk("im out yo\n\n");
+     // return;
     // Does cur pckts == tot=pckts? if so then run the checksum (todo) 
     // If it all checks out then place the mesg on the queue by calling add().  
-     printk("msg tot packets = %d",msg->totPckts);
-      if (msg->curPckts == msg->totPckts){
+     //printk("msg tot packets = %d",msg->totPckts);
+      
+     //if (msg->curPckts == msg->totPckts){
        // TODO run chksm 
-       printk("adding data");
+       //printk("adding data");
        add_msg(fds);
-      }
+      //}
 
 }

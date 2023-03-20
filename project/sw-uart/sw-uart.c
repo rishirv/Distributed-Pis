@@ -81,6 +81,8 @@ int sw_uart_get8_timeout(sw_uart_t* uart, uint32_t timeout_usec){
 int sw_uart_get32B(sw_uart_t* uart, uint32_t timeout_usec, uint8_t* buff){
     for (int i = 0; i< 32; i++){
         int succ = sw_uart_get8_timeout(uart,timeout_usec);
+        
+        //int succ = sw_uart_get8(uart);
         if (succ == -1) return i;
         buff[i] = (char)succ;
     }
