@@ -7,15 +7,16 @@
 # then this
 #PROGS = $(wildcard ./tests/output-test*.c)
 # do this first to develop
-#PROGS = test_pi_datapkts.c
-#PROGS = hello.c
+PROGS = test_pi_datapkts.c
+PROGS = hello.c
+#PROGS = rec-test.c
 #PROGS = 1-getc-test.c
 PROGS = test_pi_serverinit.c
 #once your sw-uart works: add sw-uart-veneer.c
  #COMMON_SRC += sw-uart-veneer.c
 COMMON_SRC += sw-uart.c
 COMMON_SRC += pi-esp.c
-
+COMMON_SRC += fds.c 
 # can use the staff code to see that things work.
 # STAFF_OBJS := staff-sw-uart.o
 
