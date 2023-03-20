@@ -77,7 +77,7 @@ int sw_uart_get8_timeout(sw_uart_t* uart, uint32_t timeout_usec){
 }
 
 // gets 32 beautiful bytes of data, applies the timeout to each byte
-// if any byte times out we return with a -1 
+// if any byte times out we return with the byte it timed out on, returns 33 if succesfull 
 int sw_uart_get32B(sw_uart_t* uart, uint32_t timeout_usec, uint8_t* buff){
     for (int i = 0; i< 32; i++){
         int succ = sw_uart_get8_timeout(uart,timeout_usec);
@@ -122,8 +122,8 @@ sw_uart_t sw_uart_mk_helper(unsigned tx, unsigned rx,
     //     this is set!!
     gpio_set_function(tx,GPIO_FUNC_OUTPUT);
     gpio_set_function(rx,GPIO_FUNC_INPUT);
-    //gpio_set_pullup(14);
-    gpio_write(14,1);
+    gpio_set_pullup(rx);
+    //gpio_write(14,1);
     // check that the given values make sense.
     //
     // we give you the rest.
