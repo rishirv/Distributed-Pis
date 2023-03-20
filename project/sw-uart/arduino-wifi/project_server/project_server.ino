@@ -20,7 +20,7 @@ WiFiClient client13;
 WiFiClient client14;
 WiFiClient client15;
 
-void setup() {
+void setup() {  
   // set up serial port so its listening
   Serial.begin(115200);
   Serial.println("starting");
@@ -142,4 +142,3 @@ void loop() {
   // TODO: Perhaps add this to the switch case
   // TODO: Figure out why we are writing to clients that aren't connected
 }
-

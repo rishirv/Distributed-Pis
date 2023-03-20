@@ -19,14 +19,21 @@ enum {
 
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
-uint8_t client_init(void) {
+uint8_t client_init(sw_uart_t *u) {
     return 1;
 }
 
 /* Prompt the esp to init itself as an access point aka server in its setup
 Note: might not use, might just flash server code to dedicated server esp */
-uint8_t server_init(void) {
-    return 1;
+uint8_t server_init(sw_uart_t *u) {
+    // send a single command packet to your own esp with no data
+    send_cmd(u,ESP_SERVER_INIT,SELF,SELF,NULL,0);
+    uint8_t ip = 0; 
+    if ((ip = sw_uart_get8_timeout(u,5000000)) == -1){
+        printk("server_init: Timed out on receiving response from esp!\n");
+    } 
+    printk("LSB we got from server esp IP: %d\n", ip & 0xf);
+    return ip;
 }
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
@@ -68,11 +75,11 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     header->size = nbytes;
 
     //For sanity checking
-    trace("CMD nybtes = %d\n", header->nbytes);
+    /*trace("CMD nybtes = %d\n", header->nbytes);
     trace("CMD isCmd = %d\n", header->isCmd);
     trace("CMD from = %d, to = %d\n", header->esp_From, header->esp_To);
     trace("CMD cmnd = %d\n", header->cmnd);
-    trace("CMD size = %d\n", header->size);
+    trace("CMD size = %d\n", header->size);*/
 
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;
@@ -131,12 +138,12 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
 response or null if unsuccessful.*/
-uint8_t receive_data_nbytes(void) {
+uint8_t receive_data_nbytes(sw_uart_t *u) {
     return 1;
 }
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
-uint8_t connect_to_wifi(void) {
+uint8_t connect_to_wifi(sw_uart_t *u) {
     // Call send_cmd with ESP_WIFI_CONNECT
     // If return == -1, update fd field with no_ack?
     // otherwise, update fd field with ack?
@@ -144,7 +151,7 @@ uint8_t connect_to_wifi(void) {
 }
 
 // For Client: Returns whether or not this client pi's esp is connected to the server
-uint8_t is_connected(void) {
+uint8_t is_connected(sw_uart_t *u) {
     // Call send_cmd with ESP_IS_CONNECTED
     // If return == -1, update fd field with no_ack
     // otherwise, update fd field with ack 
@@ -152,7 +159,7 @@ uint8_t is_connected(void) {
 }
 
 // For Server: Obtains a list of clients currently connected to server
-uint8_t *get_connected(void) {
+uint8_t *get_connected(sw_uart_t *u) {
     return NULL;
 }
 

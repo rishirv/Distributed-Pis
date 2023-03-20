@@ -4,7 +4,7 @@
 
 WiFiClient client;
 WiFiServer wifiServer(80);
-  
+
 void setup() {
   Serial.begin(115200);
   Serial.print("connected to serial\n");
@@ -64,7 +64,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   MDNS.update();
 
   int n = MDNS.queryService("poop", "lab");
