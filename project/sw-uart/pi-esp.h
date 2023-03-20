@@ -12,6 +12,7 @@
 #define DATA_NBYTES 30 // data packets can hold a max of 30 bytes of data after header
 #define PKT_NBYTES 32
 #define SELF 0xf // use for to and from when sending a command to your own pi
+#define MAX_NCLIENTS 15
 
 enum { 
     ESP_CLIENT_INIT         = 0b0001,
@@ -93,3 +94,9 @@ uint8_t is_connected(sw_uart_t *u);
 
 // For Server: Obtains a list of clients currently connected to server
 uint8_t *get_connected(sw_uart_t *u);
+
+// TODO: If we have time, add a kill_client() method to kill a client in the event that
+// the server pi notices that a response from a client has timed out and it's time to kill!
+
+// TODO: Also add a method for client pi's to periodically check that they are connected to
+// the server and if not, reconnect!
