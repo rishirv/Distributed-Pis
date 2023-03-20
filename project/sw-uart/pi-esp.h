@@ -11,6 +11,7 @@
 #define CMD_NBYTES 9 // we don't include 2-byte header in size of data in a packet
 #define DATA_NBYTES 30 // data packets can hold a max of 30 bytes of data after header
 #define PKT_NBYTES 32
+#define SELF 0xf // use for to and from when sending a command to your own pi
 
 enum { 
     ESP_CLIENT_INIT         = 0b0001,
@@ -49,11 +50,11 @@ typedef struct esp_cmnd_pckt {
 
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
-uint8_t client_init(void);
+uint8_t client_init(sw_uart_t *u);
 
 /* Prompt the esp to init itself as an access point aka server in its setup
 Note: might not use, might just flash server code to dedicated server esp */
-uint8_t server_init(void);
+uint8_t server_init(sw_uart_t *u);
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
     Packet Headers (2 bytes) --> On every 32byte packet
@@ -82,13 +83,13 @@ uint8_t send_cmd(sw_uart_t* u, uint8_t cmd, uint8_t to, uint8_t from, const void
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
 response or null if unsuccessful.*/
-uint8_t receive_data_nbytes(void);
+uint8_t receive_data_nbytes(sw_uart_t *u);
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
-uint8_t connect_to_wifi(void);
+uint8_t connect_to_wifi(sw_uart_t *u);
 
 // For Client: Returns whether or not this client pi's esp is connected to the server
-uint8_t is_connected(void);
+uint8_t is_connected(sw_uart_t *u);
 
 // For Server: Obtains a list of clients currently connected to server
-uint8_t *get_connected(void);
+uint8_t *get_connected(sw_uart_t *u);
