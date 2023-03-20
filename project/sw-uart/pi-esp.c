@@ -32,7 +32,6 @@ uint8_t server_init(sw_uart_t *u) {
     if ((ip = sw_uart_get8_timeout(u,5000000)) == -1){
         printk("server_init: Timed out on receiving response from esp!\n");
     } 
-    printk("LSB we got from server esp IP: %d\n", ip & 0xf);
     return ip;
 }
 
@@ -75,11 +74,11 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     header->size = nbytes;
 
     //For sanity checking
-    /*trace("CMD nybtes = %d\n", header->nbytes);
+    trace("CMD nybtes = %d\n", header->nbytes);
     trace("CMD isCmd = %d\n", header->isCmd);
     trace("CMD from = %d, to = %d\n", header->esp_From, header->esp_To);
     trace("CMD cmnd = %d\n", header->cmnd);
-    trace("CMD size = %d\n", header->size);*/
+    trace("CMD size = %d\n", header->size);
 
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;

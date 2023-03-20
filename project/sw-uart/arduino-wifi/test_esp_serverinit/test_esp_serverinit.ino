@@ -59,28 +59,50 @@ typedef struct pi_buff{
 // eventually this should be an array of these structs.
 pi_buff* from_pi = (pi_buff*)malloc(sizeof(pi_buff));
 
+// Clean the state but don't through an alarming error :)
+void clean(){
+  // okay not sure why but the free is causing issues i.e pehaps buff is the wrong value besides null
+  if  (from_pi-> buff!= NULL){
+    free(from_pi->buff);
+    from_pi->buff = NULL;
+  }
+
+  // resetting, dont memset thatll be bad times
+  from_pi->cmnd = 0;
+  from_pi->numPckts = 0;
+  from_pi->curPckts = 0;
+  from_pi->runRdy = 0;
+
+  // drain the read buffer in case we are out of sync
+  while(mySerial.available()){
+    mySerial.read();
+    yield();
+  }
+ //TODO  write a no-ack
+}
+
 // error in reading pi packet 
 void read_err_pi(){
- Serial.println("READ ERROR PI");
- //reset our buffer state, making sure to free the buffer
+  Serial.println("READ ERROR PI");
+  //reset our buffer state, making sure to free the buffer
 
-// okay not sure why but the free is causing issues i.e pehaps buff is the wrong value besides null
- if  (from_pi-> buff!= NULL){
-   free(from_pi->buff);
-   from_pi->buff = NULL;
- }
+  // okay not sure why but the free is causing issues i.e pehaps buff is the wrong value besides null
+  if  (from_pi-> buff!= NULL){
+    free(from_pi->buff);
+    from_pi->buff = NULL;
+  }
 
-// resetting, dont memset thatll be bad times
- from_pi->cmnd = 0;
- from_pi->numPckts = 0;
- from_pi->curPckts = 0;
- from_pi->runRdy = 0;
+  // resetting, dont memset thatll be bad times
+  from_pi->cmnd = 0;
+  from_pi->numPckts = 0;
+  from_pi->curPckts = 0;
+  from_pi->runRdy = 0;
 
- // drain the read buffer in case we are out of sync
- while(mySerial.available()){
-   mySerial.read();
-   yield();
- }
+  // drain the read buffer in case we are out of sync
+  while(mySerial.available()){
+    mySerial.read();
+    yield();
+  }
  //TODO  write a no-ack
 }
 
@@ -145,9 +167,8 @@ void parseNreadPckt(){
     free(buff);
 }
 
-
-void runCmnd(){
-  // printing everything out 
+void sanity_print(){
+    // printing everything out 
     Serial.println("Hooray running a commmand, but not really cause I dont have it together");
     Serial.printf("Num packets: %d \n",from_pi->numPckts);
     Serial.printf("Cmnd: %x \n",from_pi->cmnd);
@@ -172,8 +193,7 @@ void runCmnd(){
       }
       Serial.println(']');
     }
-
-    read_err_pi();
+    //read_err_pi();
 }
 
 IPAddress server_init(void) {
@@ -220,6 +240,50 @@ IPAddress server_init(void) {
   return WiFi.softAPIP();
 }
 
+void runCmnd(){
+  IPAddress ip;
+  uint8_t lsb;
+  switch(from_pi->cmnd) {
+    case ESP_CLIENT_INIT:
+      Serial.println("Got ESP_CLIENT_INIT");
+      break;
+    case ESP_SERVER_INIT:
+      Serial.println("About to init server!!!");
+      ip = server_init();
+      lsb = ip[3];
+      Serial.printf("Inited server with IP = %s, LSB = %d\n", ip.toString().c_str(), lsb);
+      // Send the LSB of the IP address back to the pi!
+      mySerial.write(lsb);
+      break;      
+    case ESP_SEND_DATA:
+      Serial.println("Got ESP_SEND_DATA");
+      break;
+    case ESP_WIFI_CONNECT:
+      Serial.println("Got ESP_WIFI_CONNECT");
+      break;
+    case ESP_IS_CONNECTED:
+      Serial.println("Got ESP_IS_CONNECTED");
+      break;
+    case ESP_GET_CONNECTED_LIST:
+      Serial.println("Got ESP_GET_CONNECTED_LIST");
+      break;
+    case ESP_NOP:
+      Serial.println("Got ESP_NOP");
+      break;
+    case ESP_ACK:
+      Serial.println("Get ESP_ACK");
+      break;
+    case ESP_NOACK:
+      Serial.println("Get ESP_NOACK");
+      break;
+    default:
+      Serial.println("GOT A WEIRD ASS COMMAND");
+      //TODO: LET PI KNOW THAT IT WILL NEED TO RETRANSMIT
+      read_err_pi();
+  }
+  clean();
+}
+
 void setup() {
   Serial.println("IN SET UP!!!");
   // set up serial port so its listening
@@ -243,18 +307,6 @@ void setup() {
 
 void loop() {
   // check if runRdy and if so, run command!
-  if(mySerial.available() > 31) {
-    parseNreadPckt();
-    // TODO: PUT THIS IN runCmnd!
-    if (from_pi->cmnd == ESP_SERVER_INIT) {
-      Serial.println("About to init server!!!");
-      IPAddress ip = server_init();
-      uint8_t lsb = ip[3];
-      Serial.printf("Inited server with IP = %s, LSB = %d\n", ip.toString().c_str(), lsb);
-      // Send the LSB of the IP address back to the pi!
-      mySerial.write(lsb);
-      // TODO: call the pi err to clear state but make a new function without error (e.g. clear())
-      //from_pi->runRdy--;                
-    }
-  }
+  if(from_pi->runRdy) runCmnd();
+  if(mySerial.available() > 31) parseNreadPckt();
 }

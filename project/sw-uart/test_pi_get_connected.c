@@ -18,7 +18,14 @@ void notmain(void) {
     
     uint8_t ip = server_init(&u);
 
-    printk("LSB we got from server esp IP: %d\n", ip & 0xf);
+    printk("LSB we got from server esp IP: [%d]\n", ip & 0xf);
+
+    uint8_t *clients = (uint8_t *)kmalloc(sizeof(uint8_t)*MAX_NCLIENTS);
+    
+    printk("Found the following connected clients: \n");
+    for (int i = 0; i < MAX_NCLIENTS; i++) {
+        printk("Client %d IP: %d\n", i, clients[i] & 0xf);
+    } 
     
     trace("TRACE: done!\n");
 }
