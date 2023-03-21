@@ -5,6 +5,10 @@
 #endif
 #include "gpio.h"
 
+#define POLLING 0
+#define TXPIN 23
+#define RXPIN 21
+
 
 sw_uart_t* u; 
 fd *fileTable;

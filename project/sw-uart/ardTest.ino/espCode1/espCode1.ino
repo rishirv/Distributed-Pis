@@ -2,7 +2,10 @@
 
 #define rxPin 14
 #define txPin 12
-
+#define PISPEC 0xf
+#define BYTESpMSG 30
+#define ESP_ACK 0b1000
+#define ESP_NOACK 0b1001
 SoftwareSerial mySerial = SoftwareSerial(rxPin, txPin);
 
 typedef struct esp_cmnd_pckt{
@@ -41,6 +44,34 @@ typedef struct pi_buff{
 // eventually this should be an array of these structs.
 pi_buff* from_pi = (pi_buff*)malloc(sizeof(pi_buff));
 
+
+void relay_to_pi();
+
+void send_msg();
+
+// used to send msg originating from esp to pi, sends 4 bits of data or an ACK/NOACK. 
+void writ_msg_pi(uint8_t data){
+  if (nbytes > 30) {
+    Serial.println("cannot send more than 30bytes at a time to pi from esp");
+    return;
+  }
+  // we know its always going have a specific cmnd packet
+  esp_cmd_pckt cmd_pckt;
+  memset(&cmd_pckt,0,32);
+  cmd_pckt.nbytes = 9;
+  cmd_pckt.cmnd = data;
+  cmd_pckt.isCmd = 1;
+  cmd_pckt.esp_From = PISPEC;
+  cmd_pckt.esp_To = PISPEC;
+  //memset(cmd_pckt.data,msg,nbytes);
+
+  //cast and send the cmd packet.
+  esp_cmd_pckt* cmd_pp= &cmd_pckt;
+  char* cmd_p = (char*)cmd_pp;
+  for(int i = 0; i <32;i++){
+    mySerial.print(cmd_p[i]);
+  }
+}
 //TODO eventually take in which pi we are writing the message to, leave be for now. 
 void write_msg_pi(){
   esp_cmnd_pckt cmd_pckt;
@@ -51,7 +82,7 @@ void write_msg_pi(){
   cmd_pckt.esp_From = 0xa;
   cmd_pckt.esp_To = 0xa;
   cmd_pckt.cmnd = 0xf;
-  cmd_pckt.size = 35;
+  cmd_pckt.size = 30;
 
   esp_pckt data;
   data._sbz1 =0;
@@ -64,20 +95,20 @@ void write_msg_pi(){
   for(int i = 0; i < 30; i++){
     data.data[i] = st[i];
   } 
-/*
+
   esp_cmnd_pckt* cmd_pp= &cmd_pckt;
   char* cmd_p = (char*)cmd_pp;
   //mySerial.print(0);
-  mySerial.print(0);
+  //mySerial.print(0);
+  //  digitalWrite(txPin,LOW);
+  //  digitalWrite(txPin,HIGH);
   for(int i = 0; i <32;i++){
     mySerial.print(cmd_p[i]);
   }
-  /*
-  for(int i = 0; i < 32; i++){
-    mySerial.print(cmd_p[i]);
-  }
+  
+
   int k = 0;
-  while(k < 100000){
+  /*while(k < 1){
     yield();
     k++;
   }*/
@@ -85,13 +116,13 @@ void write_msg_pi(){
   esp_pckt* data_pp = &data;
   char* data_p = (char*)data_pp;  
   //mySerial.print(0);
-  digitalWrite(txPin,LOW);
+ // digitalWrite(txPin,LOW);
 
   //delay
   /*for(int i = 0; i < 1; i++){
     yield();
   }*/
-  digitalWrite(txPin,HIGH);
+  //digitalWrite(txPin,HIGH);
   for (int i =0; i< 32; i++){
     mySerial.print(data_p[i]);
   }
