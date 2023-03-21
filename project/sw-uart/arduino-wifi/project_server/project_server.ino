@@ -61,13 +61,14 @@ void loop() {
   MDNS.update();
 WiFiClient clientLocal = server.available(); // returns either a false value or a client with data ready to read. 
 if(clientLocal) {
-  Serial.println("added client");
-  client = clientLocal;
+  Serial.println("heard from client");
+  //client = clientLocal;
 }
+/*
 if(client){
   Serial.println("writing");
   client.write("argh");
-}
+}*/
 
 
 

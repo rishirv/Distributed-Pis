@@ -157,12 +157,10 @@ void recieveMsgHandler(){
     esp_cmnd_pckt_t* pckt = (esp_cmnd_pckt_t*)buff;
     
     fd* fds;
-    int systemFd = 0;
     // if we don't timeout then we have a msg
     // if both are 0xf then we place this into the special fd 
     if(pckt->esp_From == 0xf && pckt->esp_To == 0xf){
         //place into special fd;
-        systemFd = 1;
         // so the 17th fd
         fds=fileTable+16;
         fds->status = pckt->cmnd;
@@ -223,7 +221,7 @@ void recieveMsgHandler(){
        esp_pckt_t* data_pckt = (esp_pckt_t*)pckt;
      //   printk("msg: [%s]\n",data_pckt->data);
        // nothing to really do here besides shove it onto the buffer! 
-       memcpy(msg->data + (30*msg->curPckts),data_pckt->data,30);
+       memcpy(msg->data + (30*msg->curPckts),data_pckt->data,data_pckt->nbytes);
        msg->curPckts ++;
     }
     //  printk("im out yo\n\n");

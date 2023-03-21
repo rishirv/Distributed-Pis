@@ -26,9 +26,8 @@ void notmain(void) {
     *u = sw_uart_init(23,21,9600);
     char* buff = kmalloc(sizeof(char) * 32);
 
-    //TODO furthermore we will need to do somethign similar for file descriptors. so we will eventually expand to a whole init function
-    
-    send_cmd(u,0b1111,0b1010,0b1010,"HELLO WORLD FROM PI HERE IS SOME PACKETS ITS GONNA BE A LOT SO JUST HANG IN THERE",82);
+    // sends command to connect
+    send_cmd(u,0b0100,0b1010,0b1010,NULL,0);
 
     trace("TRACE: done!\n");
 }
