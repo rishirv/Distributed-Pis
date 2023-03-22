@@ -8,8 +8,49 @@
 
 int fd;
 
-void parse_line(char *line) {
+#define MAX_TOKENS 100
 
+enum SHELL_COMMANDS {
+    EXIT
+};
+
+typedef struct {
+    int command;
+    int ntoks;
+    char *tokens[MAX_TOKENS];
+} shell_command_t;
+
+int parse_line(char *line, shell_command_t *cmd) {
+    char *delim = " ";
+
+    char *token = strtok(line, delim);
+
+    if (strcmp(token, "exit") == 0) {
+        cmd->command = EXIT;
+    } else {
+        output("Unrecognized command: %s\n", token);
+        return -1;
+    }
+
+    int i = 0;
+    while (token != NULL) {
+        token = strtok(NULL, delim);
+        cmd->tokens[i++] = token;
+        if (i > MAX_TOKENS) {
+            output("Too many arguments\n");
+            return -1;
+        }
+    }
+    cmd->ntoks = i;
+
+    return 1;
+}
+
+int exec_command(shell_command_t *cmd) {
+    if (cmd->command == EXIT) {
+        return -1;
+    }
+    return 1;
 }
 
 int command_loop() {
@@ -28,30 +69,31 @@ int command_loop() {
         --len;
     }
 
-    if (strcmp(line, "exit") == 0) {
-        free(line);
-        return -1;
-    }
+    shell_command_t command;
+    if (parse_line(line, &command) < 0) {
+        return 1;
+    } 
+    
+    int res = exec_command(&command);
 
-    output("%s\n", line);
     free(line);
-    return 1;
+    return res;
 }
 
 int main(int argc, char *argv[]) {
     char *dev_name = find_ttyusb_last();
-    if(!dev_name)
+    if (!dev_name)
         panic("didn't find a device\n");
 
     int tty = open_tty(dev_name);
-    if(tty < 0)
+    if (tty < 0)
         panic("can't open tty <%s>\n", dev_name);
 
-    double timeout_tenths = 2*5;
+    double timeout_tenths = 2 * 5;
     unsigned baud_rate = B115200;
 
     fd = set_tty_to_8n1(tty, baud_rate, timeout_tenths);
-    if(fd < 0)
+    if (fd < 0)
         panic("could not set tty: <%s>\n", dev_name);
 
     int res = 1;
