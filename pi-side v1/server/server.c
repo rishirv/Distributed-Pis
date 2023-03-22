@@ -4,6 +4,7 @@
 #include "libc/fast-hash32.h"
 #include "circular-queue.c"
 #include "vector-base.h"
+#include "sw-uart.c"
 
 // client status bitfield
 static volatile unsigned clients = 0;
@@ -90,31 +91,55 @@ void notmain(void) {
     pi_dirent_t root = fat32_get_root(&fs);
 
     // manually load jobs from SD card
-    pi_file_t *jobOne = read_function("job1.bin", &fs, &root);
-    pi_file_t *jobTwo = read_function("job2.bin", &fs, &root);
-    pi_file_t *jobThree = read_function("job3.bin", &fs, &root);
-    enqueue(&queue, &jobOne);
-    enqueue(&queue, &jobTwo);
-    enqueue(&queue, &jobThree);
+    // pi_file_t *jobOne = read_function("job1.bin", &fs, &root);
+    // pi_file_t *jobTwo = read_function("job2.bin", &fs, &root);
+    // pi_file_t *jobThree = read_function("job3.bin", &fs, &root);
+    // enqueue(&queue, &jobOne);
+    // enqueue(&queue, &jobTwo);
+    // enqueue(&queue, &jobThree);
 
-    pi_file_t dequeuedJob;
-    while (dequeue(&queue, &dequeuedJob)) {
-        printk("Dequeued job. n_alloc: %d, n_data: %d\n", dequeuedJob.n_alloc, dequeuedJob.n_data);
+    // pi_file_t dequeuedJob;
+    // while (dequeue(&queue, &dequeuedJob)) {
+    //     printk("Dequeued job. n_alloc: %d, n_data: %d\n", dequeuedJob.n_alloc, dequeuedJob.n_data);
         
-        // wait for an available client
-        for (int i = 0; i < sizeof(clients); i++) {
-            // if the client is available, send the job
-            if (get_client_status(i)) {
-                set_client_status(i, BUSY);
-                // TODO send job to client over ESP
-                break;
-            }
-            // if we've reached the end of the list, start over
-            if (i == sizeof(clients) - 1) {
-                i = 0;
-            }
+    //     // wait for an available client
+    //     for (int i = 0; i < sizeof(clients); i++) {
+    //         // if the client is available, send the job
+    //         if (get_client_status(i)) {
+    //             set_client_status(i, BUSY);
+    //             // TODO send job to client over ESP
+    //             break;
+    //         }
+    //         // if we've reached the end of the list, start over
+    //         if (i == sizeof(clients) - 1) {
+    //             i = 0;
+    //         }
+    //     }
+    // }
+
+    trace("about to use the sw-uart\n");
+    trace("if your pi locks up, it means you are not transmitting\n");
+
+    // turn off the hw UART so can use the same device.
+    uart_disable();
+
+    // use pin 20 for tx, 21 for rx
+    sw_uart_t u = sw_uart_init(20, 21, 9600);
+
+    const char *message = "START:In a distant land, a curious robot named CursorBot discovered an ancient library filled with forgotten knowledge. Among the texts, it found information about a powerful energy source called \"The Nexus.\" Determined to share this knowledge, CursorBot traveled to the capital city and convinced the governing council to fund a research project. As the lead researcher, CursorBot worked with a team of scientists to unlock the secrets of The Nexus. Their efforts paid off, providing clean, limitless energy to the entire planet, revolutionizing the lives of its inhabitants.:END";
+
+    while (1) {
+        sw_uart_putk(&u, message);
+
+        int res = sw_uart_get8_timeout(&u, 1000);
+        if (res == 'X') {
+            break;
         }
     }
+
+    // reset to using the hardware uart.
+    uart_init();
+    trace("TRACE: done!\n");
 
     return;
 }
