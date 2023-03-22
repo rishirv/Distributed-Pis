@@ -60,7 +60,7 @@ typedef struct pi_buff{
 
 //############################# CLIENT SPECIFIC##########################
 int serverPort = 1001;
-int serverIP =0;
+IPAddress serverIP =0;
 
 // TODO we should have a server ip and port # this could be hardcoded or otherwise
 void client_wifi_cnct(){
@@ -348,7 +348,10 @@ void loop() {
   //Serial.println(mySerial.available());
   
   if(from_pi->runRdy) return runCmnd();
-  if(mySerial.available() > 31) return parseNreadPckt();
+  if(mySerial.available() > 31){
+    Serial.println("got packet");
+   return parseNreadPckt();
+  }
   //if(i%500000 == 0){
    // Serial.println("writing message");
   //write_msg_pi(0b1111);

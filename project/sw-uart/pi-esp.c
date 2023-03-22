@@ -3,7 +3,7 @@
 #include "sw-uart.h"
 #include "pi-esp.h"
 #include "fast-hash32.h"
-
+#include "constants.h"
 /* Commands encoded like so:
 enum { 
     ESP_CLIENT_INIT         = 0b0001,
@@ -138,9 +138,20 @@ uint8_t receive_data_nbytes(void) {
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
 uint8_t connect_to_wifi(void) {
     // Call send_cmd with ESP_WIFI_CONNECT
-    // If return == -1, update fd field with no_ack?
-    // otherwise, update fd field with ack?
-    return 1;
+    send_cmd(u,ESP_WIFI_CONNECT,0xf,0xf,NULL,0);
+
+    // okay now we want to wait on our fds 
+    fd fds = get_fd(MAXFILES);
+    // wait till we see a status change which marks either a success or fail 
+    while(fds.status == NONE) {
+        fds = get_fd(MAXFILES);
+    }
+    // gets and clears status 
+    int status = get_status(&fds);
+    if (status == ESP_FAIL) return -1;
+    
+    // otherwise set the esp_id with the status (this is our ip for from addr);
+     return status;
 }
 
 // For Client: Returns whether or not this client pi's esp is connected to the server
@@ -153,7 +164,13 @@ uint8_t is_connected(void) {
 
 // For Server: Obtains a list of clients currently connected to server
 uint8_t *get_connected(void) {
-    return NULL;
+    // this would look like sending a command 
+    // checking to make sure we get an ack that the command was recieved (so wait on status for a minute refetching file descriptor) can set a timer and resend after a few seconds .. etc probably need to set up some kind of pattern but not priority
+    
+    // now waiting to recieve an 8byte value.. this 8 byte value consists of 16 4bit
+    // TODO create an array that holds these values (make them uint8s) do so by looping thru the 8 bytes, to get the first part just left shift 4 to get the second just clear the upper 4 bits (but make sure to do so on copies or inline so you dont mess up the reference value for the second entry) If its 0 dont bother appending it to array that means it was not connected. 
+
+     return NULL;
 }
 
 

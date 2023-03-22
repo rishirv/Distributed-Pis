@@ -27,7 +27,8 @@ void notmain(void) {
     char* buff = kmalloc(sizeof(char) * 32);
 
     // sends command to connect
-    send_cmd(u,0b0100,0b1010,0b1010,NULL,0);
-
+    //send_cmd(u,0b0100,0b1010,0b1010,NULL,0);
+    uint8_t success = connect_to_wifi();
+    if(success) printk("Success connected to wifi\n");
     trace("TRACE: done!\n");
 }

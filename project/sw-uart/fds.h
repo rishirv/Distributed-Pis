@@ -2,7 +2,7 @@
 
 #define __FDS_H__
 
-#define NONE 0b0000
+#define NONE 0b1111
 #define MAXFILES 17 // 16 for 4 bits worth + 1 for system reserved
 // malloc the msg and put the pointer on the queue
 typedef struct msg_t{

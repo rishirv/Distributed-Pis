@@ -38,7 +38,7 @@
 void init_fileTable(){
     fileTable = (fd*)kmalloc(sizeof(fd)*MAXFILES);
     //TODO DONE loop thru init each one, malloc the initial message as well! 
-    for(int i= 0; i <MAXFILES; i++){
+    for(int i= 0; i <MAXFILES +1; i++){
         msg_t* cur_msg = (msg_t*)kmalloc(sizeof(cur_msg));
         // init the values to be proper
         cur_msg->has_cmd = 0;

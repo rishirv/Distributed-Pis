@@ -21,6 +21,7 @@ Serial.println("starting");
   // for now setup access point 
   WiFi.mode(WIFI_AP);
   Serial.println(WiFi.softAP(ssid,password) ? "Ready" : "Failed!");
+  Serial.println(WiFi.softAPIP().toString().c_str());
 
 // now setup a wifi server to listen on a port. 
 server.begin();
