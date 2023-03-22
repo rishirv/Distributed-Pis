@@ -11,6 +11,9 @@
 #define CMD_NBYTES 9 // we don't include 2-byte header in size of data in a packet
 #define DATA_NBYTES 30 // data packets can hold a max of 30 bytes of data after header
 #define PKT_NBYTES 32
+
+#define ESP_FAIL 0b0000
+
 #define SELF 0xf // use for to and from when sending a command to your own pi
 #define MAX_NCLIENTS 15
 
@@ -25,6 +28,8 @@ enum {
     ESP_ACK                 = 0b1000,
     ESP_NOACK               = 0b1001,
 };
+
+
 
 typedef struct esp_pckt {
     uint16_t

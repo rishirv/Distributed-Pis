@@ -4,6 +4,7 @@
 #include "sw-uart.h"
 #include "pi-esp.h"
 #include "fast-hash32.h"
+#include "rpi-interrupts.h"
 #include "constants.h"
 
 
@@ -19,6 +20,9 @@ void init(){
     char* buff = kmalloc(sizeof(char) * 32);
     
     init_fileTable();
+    int_init();
+    gpio_int_falling_edge(21);
+    system_enable_interrupts();
 }
 
 void notmain(void) {
@@ -40,7 +44,7 @@ void notmain(void) {
     
     while(has_msg(&fds)){
         // okay this isnt great as we kmalloc everytime but eventually itll at least be interrupts
-        recieveMsgHandler();
+        //recieveMsgHandler();
      //   printk("returned from msg handler\n");
         fds=(get_fd(0xa));
     }
@@ -51,6 +55,7 @@ void notmain(void) {
     for(int i = 0; i < 36; i++){
         printk("%c",our_msg->data[i]);
     }
+    printk("\n");
     //printk("This is msg: %s \n",our_msg->data);
     // okay now we will sit and hit the recieve msg until we see somethign in the queue
     trace("TRACE: done!\n");

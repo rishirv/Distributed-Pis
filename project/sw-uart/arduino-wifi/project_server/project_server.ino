@@ -32,6 +32,7 @@ void setup() {
   // for now setup access point 
   WiFi.mode(WIFI_AP);
   Serial.println(WiFi.softAP(ssid,password) ? "Ready" : "Failed!");
+  Serial.println(WiFi.softAPIP().toString().c_str());
 
   // now setup a wifi server to listen on a port. 
   server.begin();
@@ -58,6 +59,7 @@ uint8_t id = 0;
 uint32_t i2 = 0;
 uint32_t i3 = 0;
 void loop() {
+
   MDNS.update(); // Always have to do in loop
   WiFiClient clientLocal = server.available(); 
   if(clientLocal) {
@@ -141,4 +143,5 @@ void loop() {
   // TODO: Fill in for remaining clients
   // TODO: Perhaps add this to the switch case
   // TODO: Figure out why we are writing to clients that aren't connected
+
 }

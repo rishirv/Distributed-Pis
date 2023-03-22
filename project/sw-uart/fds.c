@@ -1,7 +1,8 @@
 #include "rpi.h"
 #include "constants.h"
 #include "pi-esp.h"
-
+#include "cycle-count.h"
+#include "cycle-util.h"
 // TODO should wrap most of our defines in these so we avoid redefinition hell
 #ifndef __FDS_H__
     #include "fds.h"
@@ -37,7 +38,7 @@
 void init_fileTable(){
     fileTable = (fd*)kmalloc(sizeof(fd)*MAXFILES);
     //TODO DONE loop thru init each one, malloc the initial message as well! 
-    for(int i= 0; i <MAXFILES; i++){
+    for(int i= 0; i <MAXFILES +1; i++){
         msg_t* cur_msg = (msg_t*)kmalloc(sizeof(cur_msg));
         // init the values to be proper
         cur_msg->has_cmd = 0;
@@ -46,9 +47,7 @@ void init_fileTable(){
         cur_msg->curPckts=0;
         cur_msg->data=NULL; int k = 0;
 
-        //fileTable[i] = (fd*)kmalloc(sizeof(fd));
         fileTable[i].cur_msg = cur_msg;
-        //fileTable[i]->cur_msg = cur_msg;
         //not sure if we need to init the Q 
         fileTable[i].status=NONE;
     }
@@ -96,21 +95,64 @@ int add_msg(fd* fds){
    return 1; 
 }
 
-
 // has u from constants
 // note: it would be nice to No-Ack back if there was an issue, however that means our 
 // handler will be constrained to the speed of our baud and a 32byte send. This isnt gonna fly in a multithread world so we will ignore and let timeouts handle things on the other end. 
 
 // we just clear current message on a return;
 void recieveMsgHandler(){
-    // read msg
-    char* buff = kmalloc(sizeof(esp_cmnd_pckt_t));
+    // TODO hardcoded fix later
+    
 
-    // timeout at 1, see if this is too slow. seems slow to me for an interrupt but not much to be done rn. 
-    int succ = sw_uart_get32B(u,5000,buff);
+    // read msg - all pulled in to ensure this is fast without timing issue: 
+    char* buff = kmalloc(sizeof(esp_cmnd_pckt_t));
+    int bytesRead = 0;
+    // change as needed
+    int timeout_usec = 5000;
+    for (int i = 0; i< 32; i++, bytesRead++){
+        int c = 0;
+        // start a timeout timer
+        uint32_t timer_st = timer_get_usec();
+        // normally high will start reading once it goes low
+        // If this is interrupt enabled then we only wnat to force the falling bit on subsequent bits, as we already know the first bit is falling.
+        if( POLLING || i > 0){
+            while(!gpio_read(u->rx) && (timer_get_usec() - timer_st) < timeout_usec);
+        }
+        while(gpio_read(u->rx) && (timer_get_usec() - timer_st) < timeout_usec);
+        // if we fell through due to timeout then we return a -1
+        if (timer_get_usec() - timer_st > timeout_usec) {
+            c = -1;
+            break;}
+
+        int start = cycle_cnt_read();
+        delay_ncycles(start,(u->cycle_per_bit) /2);
+        start += u->cycle_per_bit /2;
+    
+        delay_ncycles(start,(u->cycle_per_bit) );
+        start += u->cycle_per_bit;
+    
+        for(int i = 0; i <8; i++){
+            c |= gpio_read(u->rx) << i;
+            delay_ncycles(start,u->cycle_per_bit);
+            start += u->cycle_per_bit;
+        }
+        if (c == -1) {
+            bytesRead = i;
+            break;
+        }
+
+        buff[i] = (char)c;
+    }
+
+    gpio_event_clear(RXPIN);
     // if we timeout then just return
-    if (succ < 33) return;
-    printk("got a message!\n");
+    if (bytesRead < 32) {
+        printk("failed: %d",bytesRead);
+        return;
+    }
+
+
+    // ######################## WE HAVE A MESSAGE ##############################
     // cast to a pck_cmnd_strct 
     esp_cmnd_pckt_t* pckt = (esp_cmnd_pckt_t*)buff;
     
@@ -119,18 +161,15 @@ void recieveMsgHandler(){
     // if both are 0xf then we place this into the special fd 
     if(pckt->esp_From == 0xf && pckt->esp_To == 0xf){
         //place into special fd;
-        //TODO 
-        fds=NULL;
-        printk("special fds");
+        // so the 17th fd
+        fds=fileTable+16;
+        fds->status = pckt->cmnd;
+        return;
+        //printk("special fds");
     }else{
         //otherwise take the from field
-        // get the fd (just index into the global fd table for now)
-        // TODO
-      //  printk("got fds %x\n",pckt->esp_From);
         fds= fileTable+pckt->esp_From;
-        printk("fds: %x\n",fds);
     }
-    
 
     msg_t* msg = fds->cur_msg;
     // now parse the packet: is is a cmnd? 
@@ -163,27 +202,36 @@ void recieveMsgHandler(){
 
         msg->curPckts = 0; // we havent seen a data packet yet
         // prepare the buffer for the message, not mallocing for headers: we strip those! 
-        //msg->data = kmalloc(sizeof(char)* pckt->size);
-        msg->data = kmalloc(sizeof(char)* 64);
-        //printk("succesfull return from cmnd msg\n");
-        // okay we got it all we can return;
+        msg->data = kmalloc(30*msg->totPckts);
+     //   printk("succesfull return from cmnd msg\n");
         return; 
     }else{
-        printk("message is data\n");
+        //if we havent seen a cmnd pckt already then we are in error 
+        if(!msg->has_cmd){
+            msg->totPckts =0;
+            msg->curPckts =0;
+            msg->data =NULL;
+
+            printk("err data packet but no cmnd packet seen\n");
+            return;
+        }
+
+       // printk("message is data\n");
        //data packet
        esp_pckt_t* data_pckt = (esp_pckt_t*)pckt;
-        printk("msg: %s\n",data_pckt->data);
+     //   printk("msg: [%s]\n",data_pckt->data);
        // nothing to really do here besides shove it onto the buffer! 
-       memcpy(msg->data + (30*msg->curPckts),data_pckt->data,30);
+       memcpy(msg->data + (30*msg->curPckts),data_pckt->data,data_pckt->nbytes);
        msg->curPckts ++;
     }
-    
+    //  printk("im out yo\n\n");
     // Does cur pckts == tot=pckts? if so then run the checksum (todo) 
     // If it all checks out then place the mesg on the queue by calling add().  
-     printk("msg tot packets = %d",msg->totPckts);
-      if (msg->curPckts == msg->totPckts){
+     //printk("msg tot packets = %d",msg->totPckts);
+      
+     if (msg->curPckts == msg->totPckts){
        // TODO run chksm 
-       printk("adding data");
+       //printk("adding data");
        add_msg(fds);
       }
 

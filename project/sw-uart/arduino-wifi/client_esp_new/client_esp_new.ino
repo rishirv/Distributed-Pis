@@ -6,9 +6,21 @@
 #define txPin 12
 #define PISPEC 0xf
 #define BYTESpMSG 30
-#define ESP_ACK 0b1000
-#define ESP_NOACK 0b1001
 #define ESP_FAIL 0b0000
+
+enum { 
+    INIT                    = 0b0010,
+    ESP_SEND_DATA           = 0b0011,
+    ESP_WIFI_CONNECT        = 0b0100,
+    ESP_IS_CONNECTED        = 0b0101,
+    ESP_GET_CONNECTED_LIST  = 0b0110,
+    ESP_NOP                 = 0b0111,
+    ESP_ACK                 = 0b1000,
+    ESP_NOACK               = 0b1001,
+};
+
+const char* ssid = "poop";
+const char* password = "password";
 
 SoftwareSerial mySerial = SoftwareSerial(rxPin, txPin);
 WiFiClient client; 
@@ -48,7 +60,7 @@ typedef struct pi_buff{
 
 //############################# CLIENT SPECIFIC##########################
 int serverPort = 1001;
-int serverIP = 0;
+IPAddress serverIP =0;
 
 // TODO we should have a server ip and port # this could be hardcoded or otherwise
 void client_wifi_cnct(){
@@ -65,12 +77,14 @@ void client_wifi_cnct(){
        return;
      }
    }
+   serverIP = WiFi.gatewayIP();
   // have network connection, try to connect a tcp server
    if (!serverIP || !client.connect(serverIP,serverPort)){
      Serial.println("whoops failed to conncect tcp");
      write_msg_pi(ESP_FAIL);
    }
    else{
+     Serial.printf("local ip is %x", WiFi.localIP()[3]);
      // success we can write our (the client) ip to the pi
      write_msg_pi((uint8_t)(WiFi.localIP()[3] & 0b1111));
    }
@@ -158,10 +172,9 @@ void write_msg_pi(uint8_t data){
 }
 
 
-
 // error in reading pi packet 
-void read_err_pi(){
- Serial.println("READ ERROR PI");
+void clean(){
+// Serial.println("READ ERROR PI");
  //reset our buffer state, making sure to free the buffer
 
 // okay not sure why but the free is causing issues i.e pehaps buff is the wrong value besides null
@@ -189,14 +202,14 @@ void parsePacket(char* packet){
  
   if(from_pi->runRdy){
     Serial.println("need to run current command before parsing new one");
-    return read_err_pi();
+    return clean();
   }
 
   esp_cmnd_pckt* pckt = (esp_cmnd_pckt*)packet;
 
   if (pckt->nbytes == 0) {
     Serial.println("failed nbytes is 0");
-    read_err_pi();
+    clean();
     return;
     }
 
@@ -207,7 +220,7 @@ void parsePacket(char* packet){
         if (from_pi->cmnd >0) Serial.println("already seen cmnd");
         if (pckt->cmnd == 0) Serial.println("cmnd empty on pckt");
        // Serial.println("error cmnd already seen in pckt");
-        return read_err_pi();
+        return clean();
       }
       // allocate buffer space for the full message, assign size and command to the struct
       from_pi->buff = (esp_pckt*)malloc(sizeof(esp_pckt) * ((pckt->size /30)+(pckt->size % 30 > 0)));
@@ -216,7 +229,7 @@ void parsePacket(char* packet){
       *from_pi->cmnd_pckt = *pckt;
   }else{
     // its data, check for errors 
-    if (from_pi->cmnd == 0 || from_pi->buff == NULL) return read_err_pi();
+    if (from_pi->cmnd == 0 || from_pi->buff == NULL) return clean();
     
     // We actually want to include all the header packets bc it will be needed on the other side as well. 
     esp_pckt * data_pckt = (esp_pckt*)pckt;
@@ -242,7 +255,7 @@ void parseNreadPckt(){
     free(buff);
 }
 
-void runCmnd(){
+void sanityPrint(){
   // printing everything out 
     Serial.println("Hooray running a commmand, but not really cause I dont have it together");
     Serial.printf("Num packets: %d \n",from_pi->numPckts);
@@ -269,7 +282,44 @@ void runCmnd(){
       Serial.println(']');
     }
 
-    read_err_pi();
+    clean();
+}
+
+void runCmnd(){
+  IPAddress ip;
+  uint8_t lsb;
+  switch(from_pi->cmnd) {
+    case INIT:
+      Serial.println("Got ESP_CLIENT_INIT");
+      break;
+    case ESP_SEND_DATA:
+      Serial.println("Got ESP_SEND_DATA");
+      break;
+    case ESP_WIFI_CONNECT:
+      Serial.println("Got ESP_WIFI_CONNECT");
+      client_wifi_cnct();
+      break;
+    case ESP_IS_CONNECTED:
+      Serial.println("Got ESP_IS_CONNECTED");
+      break;
+    case ESP_GET_CONNECTED_LIST:
+      Serial.println("Got ESP_GET_CONNECTED_LIST");
+      break;
+    case ESP_NOP:
+      Serial.println("Got ESP_NOP");
+      break;
+    case ESP_ACK:
+      Serial.println("Get ESP_ACK");
+      break;
+    case ESP_NOACK:
+      Serial.println("Get ESP_NOACK");
+      break;
+    default:
+      Serial.println("GOT A WEIRD ASS COMMAND");
+      //TODO: LET PI KNOW THAT IT WILL NEED TO RETRANSMIT
+      clean();
+  }
+  clean();
 }
 
 void setup() {
@@ -280,7 +330,7 @@ void setup() {
 
   mySerial.begin(9600);
 
-  Serial.printf("size of cmnd: %d \n", sizeof(esp_cmnd_pckt));
+  //Serial.printf("size of cmnd: %d \n", sizeof(esp_cmnd_pckt));
   // setup from Pi buffer
    from_pi->runRdy= 0;
   from_pi->buff = NULL;
@@ -289,6 +339,8 @@ void setup() {
   from_pi-> cmnd = 0;
   // probs dont need to malloc, was just for sanity earlier.
   from_pi->cmnd_pckt = (esp_cmnd_pckt*)malloc(sizeof(esp_cmnd_pckt));
+
+  WiFi.mode(WIFI_STA); 
 }
 
 int i = 0;
@@ -296,10 +348,13 @@ void loop() {
   //Serial.println(mySerial.available());
   
   if(from_pi->runRdy) return runCmnd();
-  if(mySerial.available() > 31) return parseNreadPckt();
-  if(i%500000 == 0){
-    Serial.println("writing message");
-  write_msg_pi(0b1111);
+  if(mySerial.available() > 31){
+    Serial.println("got packet");
+   return parseNreadPckt();
   }
-  i++;
+  //if(i%500000 == 0){
+   // Serial.println("writing message");
+  //write_msg_pi(0b1111);
+  //}
+//  i++;
 }
