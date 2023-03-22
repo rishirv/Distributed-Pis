@@ -10,7 +10,7 @@
 PROGS = test_pi_datapkts.c
 PROGS = hello.c
 PROGS = recieveServ.c
-PROGS = sendClient.c
+#PROGS = sendClient.c
 #PROGS = 1-getc-test.c
 #PROGS = test_pi_serverinit.c
 

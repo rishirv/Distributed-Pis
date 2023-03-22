@@ -51,7 +51,7 @@ void notmain(void) {
     fd fds = get_fd(1);
 
     for(int i = 0; i < 10; i++){
-        delay_us(10000);
+        delay_us(1000000);
         printk("sending\n");
         send_cmd(u,ESP_SEND_DATA,0x1,0x2,"HELLO SERVER FROM CLIENT PI",27);
     }

@@ -69,13 +69,14 @@ IPAddress serverIP = 0;
 // TODO we should have a server ip and port # this could be hardcoded or otherwise
 void client_wifi_cnct(){
    if(WiFi.status() != WL_CONNECTED){
-     int i = 0;
      // try to connect 10 times
-     for(; i < 10; i++){
-       if(WiFi.begin(ssid,password)== WL_CONNECTED) break;
+     WiFi.begin(ssid,password);
+     for(int i = 0; i < 10; i++){
+       if(WiFi.status()== WL_CONNECTED) break;
+       delay(1000);
      }
      // if we couldnt connect then fail 
-     if (i == 10){
+     if (WiFi.status() != WL_CONNECTED){
        Serial.println("didnt find a network connection");
        write_msg_pi(ESP_FAIL);
        return;
@@ -287,12 +288,18 @@ void relay_to_pi( char* buff){
 };
 
 void parseFromEsp(){
+  Serial.printf("Client gets: %d\n",client.available());
   if (client.available()< 32) return;
   Serial.println("got some stuff from esp in parse");
   char* buff = (char*)malloc(sizeof(char)*32);
   for(int i = 0;i<32;i++){
     buff[i] = client.read();   
+    Serial.printf("%c",buff[i]);
   }
+  // TAKE OUT WHEN DONE 
+  Serial.println("\nreturning from parse");
+  return;
+
   esp_cmnd_pckt* pckt = (esp_cmnd_pckt*)buff;
   if(!(pckt->esp_To < 16 && pckt->esp_From < 16)){
     Serial.println("something awry with packet");
@@ -311,9 +318,19 @@ void send_nack(){
 
 // TODO: take in which pi_buffer we should be looking at, i.e the esp_to 
 void send_msg(){
+  // HARDCODED
+  Serial.println("sending hardcoded message");
+  while(!client.connected()) client.connect(serverIP,1001);
+
+    client.write("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEQ");
+    Serial.println("sent message");
+  
+  return;
+  // 
   WiFiClient curClient;
   if(SERVER){
-    curClient = getClient(from_pi->cmnd_pckt->esp_To);
+    //curClient = getClient(from_pi->cmnd_pckt->esp_To);
+    curClient = client;
   }else{
     curClient = client; 
   }
@@ -533,6 +550,7 @@ void loop() {
     client = server.available();
     if (client){
       Serial.println("got something from esp");
+      Serial.printf("cleint in loop has %d\n",client.available());
       return parseFromEsp();
     }
   }else{
