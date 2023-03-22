@@ -12,7 +12,7 @@ enum {
     ESP_WIFI_CONNECT        = 0b0100,
     ESP_IS_CONNECTED        = 0b0101,
     ESP_GET_CONNECTED_LIST  = 0b0110,
-    ESP_NOP                 = 0b0111,
+    ESP_SERV_IP                 = 0b0111,
     ESP_ACK                 = 0b1000,
     ESP_NOACK               = 0b1001,
 };*/
@@ -26,7 +26,23 @@ uint8_t client_init(void) {
 /* Prompt the esp to init itself as an access point aka server in its setup
 Note: might not use, might just flash server code to dedicated server esp */
 uint8_t server_init(void) {
-    return 1;
+    send_cmd(u,ESP_SERVER_INIT,MAXFILES,MAXFILES,NULL,0);
+
+    // now wait on the fd status to change, need to timeout on this
+    fd fds = get_fd(MAXFILES);
+    int i = 0;
+    while(fds.status == NONE){
+       fds =  get_fd(MAXFILES);
+       /* if(i % 1000000 == 0){
+            for(int k = 0; k < 17; k++){
+                fd cur = get_fd(k);
+                printk("Status of %d = %x\n",k,cur.status);
+            }
+        }
+        i++;*/
+    }
+    printk("got status correctly\n");
+    return get_status(&fds);
 }
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
@@ -53,6 +69,7 @@ uint8_t server_init(void) {
              | totalsize |cmd| checksum  |        |
 */
 uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void *bytes, uint32_t nbytes) {
+ 
     // first check to make sure we have a valid cmd - make sure to malloc it
     esp_cmnd_pckt_t *header = kmalloc(sizeof(esp_cmnd_pckt_t));
     // zero out everything then set fields

@@ -36,9 +36,9 @@
 //likely build it out real hard... then we finish up the methods on our side... and then I think we are basically there where we wanted to be. 
 //
 void init_fileTable(){
-    fileTable = (fd*)kmalloc(sizeof(fd)*MAXFILES);
+    fileTable = (fd*)kmalloc(sizeof(fd)*(MAXFILES+1));
     //TODO DONE loop thru init each one, malloc the initial message as well! 
-    for(int i= 0; i <MAXFILES +1; i++){
+    for(int i= 0; i < (MAXFILES +1); i++){
         msg_t* cur_msg = (msg_t*)kmalloc(sizeof(cur_msg));
         // init the values to be proper
         cur_msg->has_cmd = 0;
@@ -54,7 +54,7 @@ void init_fileTable(){
 }
 
 fd get_fd(uint8_t fnum){
-    if(fnum >= MAXFILES-1) panic("INVALID FILE DESCRIPTOR NUMBER IN GET FD !");
+    if(fnum > MAXFILES) panic("INVALID FILE DESCRIPTOR NUMBER IN GET FD !");
     //basically we assume we have access to the global here 
     return fileTable[fnum];
 }
@@ -103,7 +103,6 @@ int add_msg(fd* fds){
 void recieveMsgHandler(){
     // TODO hardcoded fix later
     
-
     // read msg - all pulled in to ensure this is fast without timing issue: 
     char* buff = kmalloc(sizeof(esp_cmnd_pckt_t));
     int bytesRead = 0;
@@ -162,7 +161,7 @@ void recieveMsgHandler(){
     if(pckt->esp_From == 0xf && pckt->esp_To == 0xf){
         //place into special fd;
         // so the 17th fd
-        fds=fileTable+16;
+        fds=fileTable+MAXFILES;
         fds->status = pckt->cmnd;
         return;
         //printk("special fds");

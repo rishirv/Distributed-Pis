@@ -19,7 +19,7 @@ enum {
     ESP_WIFI_CONNECT        = 0b0100,
     ESP_IS_CONNECTED        = 0b0101,
     ESP_GET_CONNECTED_LIST  = 0b0110,
-    ESP_NOP                 = 0b0111,
+    ESP_SERV_IP                 = 0b0111,
     ESP_ACK                 = 0b1000,
     ESP_NOACK               = 0b1001,
 };
