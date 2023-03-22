@@ -16,7 +16,7 @@ void notmain(void) {
     // use pin 14 for tx, 15 for rx*/
     sw_uart_t u = sw_uart_init(23,21, 9600);
     
-    uint8_t ip = server_init(&u);
+    uint8_t ip = server_init();
 
     printk("LSB we got from server esp IP: %d\n", ip & 0xf);
     
