@@ -9,7 +9,7 @@
 #define ESP_FAIL 0b0000
 
 
-#define SERVER 0
+#define SERVER 1
 
 enum { 
     ESP_SERVER_INIT         = 0b0010,
@@ -288,6 +288,7 @@ void relay_to_pi( char* buff){
 
 void parseFromEsp(){
   if (client.available()< 32) return;
+  Serial.println("got some stuff from esp in parse");
   char* buff = (char*)malloc(sizeof(char)*32);
   for(int i = 0;i<32;i++){
     buff[i] = client.read();   
@@ -296,7 +297,7 @@ void parseFromEsp(){
   if(!(pckt->esp_To < 16 && pckt->esp_From < 16)){
     Serial.println("something awry with packet");
   }else if(SERVER){
-    updateList(pckt->esp_From);
+   // updateList(pckt->esp_From);
   }
   relay_to_pi(buff);
   free(buff);
@@ -530,11 +531,16 @@ void loop() {
   // parsing any message from the esp as a server
   if (SERVER){
     client = server.available();
-    if (client) return parseFromEsp();
-  }else{
-      if(client.available()>31) return parseFromEsp();
+    if (client){
+      Serial.println("got something from esp");
+      return parseFromEsp();
     }
-    
+  }else{
+      if(client.available()>31) {
+        return parseFromEsp();
+      }
+    }
+
   // todo : run thru a list of these structs and pass the approrpiate one to runCmnd
   if(from_pi->runRdy) return runCmnd();
   if(mySerial.available() > 31){

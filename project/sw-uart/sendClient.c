@@ -25,10 +25,17 @@ void init(){
     system_enable_interrupts();
     
     // basically loop until connect to wifi returns something other than -1 
+    printk("Connect attempt: %d", connect_to_wifi(u));
+    while(connect_to_wifi(u) == -1){
+        delay_us(100000);
+        printk("connecting... \n");
+    }
+    printk("connected to wifi\n");
     // then take what it returns and set our ip equal to it 
 
     // then make a call to get server ip to get the server ip. 
     // just hardcode it for now
+    
 }
 
 void notmain(void) {

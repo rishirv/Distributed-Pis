@@ -92,7 +92,7 @@ response or null if unsuccessful.*/
 uint8_t receive_data_nbytes(sw_uart_t *u);
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
-uint8_t connect_to_wifi(sw_uart_t *u);
+int connect_to_wifi(sw_uart_t *u);
 
 // For Client: Returns whether or not this client pi's esp is connected to the server
 uint8_t is_connected(sw_uart_t *u);

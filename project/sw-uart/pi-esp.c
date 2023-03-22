@@ -153,19 +153,18 @@ uint8_t receive_data_nbytes(sw_uart_t *u) {
 }
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
-uint8_t connect_to_wifi(sw_uart_t *u) {
+int connect_to_wifi(sw_uart_t *u) {
     // Call send_cmd with ESP_WIFI_CONNECT
     send_cmd(u,ESP_WIFI_CONNECT,0xf,0xf,NULL,0);
 
     // okay now we want to wait on our fds 
     fd fds = get_fd(MAXFILES);
     // wait till we see a status change which marks either a success or fail 
-    while(fds.status == NONE) {
-        fds = get_fd(MAXFILES);
-    }
+    while(fds.status == NONE) fds = get_fd(MAXFILES);
+    
     // gets and clears status 
     int status = get_status(&fds);
-    if (status == ESP_FAIL) return -1;
+    if (status == 0) return -1;
     
     // otherwise set the esp_id with the status (this is our ip for from addr);
      return status;

@@ -12,7 +12,8 @@ PROGS = hello.c
 PROGS = recieveServ.c
 PROGS = sendClient.c
 #PROGS = 1-getc-test.c
-PROGS = test_pi_serverinit.c
+#PROGS = test_pi_serverinit.c
+
 #once your sw-uart works: add sw-uart-veneer.c
  #COMMON_SRC += sw-uart-veneer.c
 COMMON_SRC += interrupts-c.c
