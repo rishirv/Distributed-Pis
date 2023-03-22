@@ -1,4 +1,5 @@
 PROG_SRC = shell.c
+SRC = simple-boot.c put-get.c
 
 include $(CS140E_2023_PATH)/libunix/mk/Makefile.unix
 

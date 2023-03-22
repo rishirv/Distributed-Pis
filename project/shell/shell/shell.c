@@ -5,13 +5,16 @@
 #include <termios.h>
 
 #include "libunix.h"
+#include "simple-boot.h"
 
 int fd;
+int trace_p = 1;
 
 #define MAX_TOKENS 100
 
 enum SHELL_COMMANDS {
-    EXIT
+    EXIT,
+    RUN
 };
 
 typedef struct {
@@ -20,6 +23,19 @@ typedef struct {
     char *tokens[MAX_TOKENS];
 } shell_command_t;
 
+// void send_prog(shell_command_t *cmd) {
+//     if (cmd->ntoks < 1) {
+//         output("Must supply a program to run\n");
+//         return;
+//     }
+//     char *prog = cmd->tokens[0];
+//     unsigned nbytes;
+
+//     uint8_t *code = read_file(&nbytes, prog);
+
+//     simple_boot(fd, code, nbytes);
+// }
+
 int parse_line(char *line, shell_command_t *cmd) {
     char *delim = " ";
 
@@ -27,14 +43,15 @@ int parse_line(char *line, shell_command_t *cmd) {
 
     if (strcmp(token, "exit") == 0) {
         cmd->command = EXIT;
+    } else if (strcmp(token, "run") == 0) {
+        cmd->command = RUN;
     } else {
         output("Unrecognized command: %s\n", token);
         return -1;
     }
 
     int i = 0;
-    while (token != NULL) {
-        token = strtok(NULL, delim);
+    while ((token = strtok(NULL, delim)) != NULL) {
         cmd->tokens[i++] = token;
         if (i > MAX_TOKENS) {
             output("Too many arguments\n");
@@ -47,9 +64,14 @@ int parse_line(char *line, shell_command_t *cmd) {
 }
 
 int exec_command(shell_command_t *cmd) {
-    if (cmd->command == EXIT) {
-        return -1;
+    switch (cmd->command) {
+        case EXIT:
+            return -1;
+        case RUN:
+            // send_prog(cmd);
+            break;
     }
+
     return 1;
 }
 
@@ -72,8 +94,8 @@ int command_loop() {
     shell_command_t command;
     if (parse_line(line, &command) < 0) {
         return 1;
-    } 
-    
+    }
+
     int res = exec_command(&command);
 
     free(line);
