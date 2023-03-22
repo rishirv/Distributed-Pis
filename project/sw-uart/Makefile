@@ -11,6 +11,7 @@ PROGS = test_pi_datapkts.c
 PROGS = hello.c
 #PROGS = rec-test.c
 #PROGS = 1-getc-test.c
+PROGS = test_pi_serverinit.c
 #once your sw-uart works: add sw-uart-veneer.c
  #COMMON_SRC += sw-uart-veneer.c
 COMMON_SRC += interrupts-c.c

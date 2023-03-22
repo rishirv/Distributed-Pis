@@ -19,14 +19,20 @@ enum {
 
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
-uint8_t client_init(void) {
+uint8_t client_init(sw_uart_t *u) {
     return 1;
 }
 
 /* Prompt the esp to init itself as an access point aka server in its setup
 Note: might not use, might just flash server code to dedicated server esp */
-uint8_t server_init(void) {
-    return 1;
+uint8_t server_init(sw_uart_t *u) {
+    // send a single command packet to your own esp with no data
+    send_cmd(u,ESP_SERVER_INIT,SELF,SELF,NULL,0);
+    uint8_t ip = 0; 
+    if ((ip = sw_uart_get8_timeout(u,5000000)) == -1){
+        printk("server_init: Timed out on receiving response from esp!\n");
+    } 
+    return ip;
 }
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
@@ -131,12 +137,12 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
 
 /* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
 response or null if unsuccessful.*/
-uint8_t receive_data_nbytes(void) {
+uint8_t receive_data_nbytes(sw_uart_t *u) {
     return 1;
 }
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
-uint8_t connect_to_wifi(void) {
+uint8_t connect_to_wifi(sw_uart_t *u) {
     // Call send_cmd with ESP_WIFI_CONNECT
     send_cmd(u,ESP_WIFI_CONNECT,0xf,0xf,NULL,0);
 
@@ -155,7 +161,7 @@ uint8_t connect_to_wifi(void) {
 }
 
 // For Client: Returns whether or not this client pi's esp is connected to the server
-uint8_t is_connected(void) {
+uint8_t is_connected(sw_uart_t *u) {
     // Call send_cmd with ESP_IS_CONNECTED
     // If return == -1, update fd field with no_ack
     // otherwise, update fd field with ack 
@@ -163,6 +169,7 @@ uint8_t is_connected(void) {
 }
 
 // For Server: Obtains a list of clients currently connected to server
+
 uint8_t *get_connected(void) {
     // this would look like sending a command 
     // checking to make sure we get an ack that the command was recieved (so wait on status for a minute refetching file descriptor) can set a timer and resend after a few seconds .. etc probably need to set up some kind of pattern but not priority
@@ -171,6 +178,7 @@ uint8_t *get_connected(void) {
     // TODO create an array that holds these values (make them uint8s) do so by looping thru the 8 bytes, to get the first part just left shift 4 to get the second just clear the upper 4 bits (but make sure to do so on copies or inline so you dont mess up the reference value for the second entry) If its 0 dont bother appending it to array that means it was not connected. 
 
      return NULL;
+
 }
 
 
