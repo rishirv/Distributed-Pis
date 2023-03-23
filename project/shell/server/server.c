@@ -56,7 +56,7 @@ void run_prog(void) {
     boot_put32(CODE_GOT);
 
     // Should happen on client
-    // BRANCHTO(0x80010);
+    BRANCHTO(0x80010);
 
     boot_put32(DONE);
 

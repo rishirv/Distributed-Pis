@@ -52,10 +52,8 @@ void send_prog(shell_command_t *cmd) {
     ck_eq32(fd, "Expected CODE_GOT", CODE_GOT, get_uint32(fd));
 
     uint32_t x = get_uint32(fd);
-    if (x == DONE) {
-        output("SUCCEESSSS");
-    } else {
-        output("FAILUREEE");
+    if (x != DONE) {
+        output("Could not run program\n");
     }
 
     free(code);
