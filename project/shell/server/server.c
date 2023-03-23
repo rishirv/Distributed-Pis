@@ -5,6 +5,8 @@
 #include "get-code.h"
 #include "constants.h"
 
+sw_uart_t u;
+
 static unsigned
 has_data_timeout(unsigned timeout) {
     uint32_t start = timer_get_usec();
@@ -21,6 +23,14 @@ static void wait_for_op(unsigned usec_timeout) {
     do {
         boot_put32(PI_READY);
     } while (has_data_timeout(usec_timeout) == 0);
+}
+
+
+void sw_uart_putk_ignorenull(sw_uart_t *uart, const char *msg, size_t len) {
+    size_t i;
+    for (i = 0; i < len; i++) {
+        sw_uart_put8(uart, msg[i]);
+    }
 }
 
 void run_prog(void) {
@@ -42,21 +52,27 @@ void run_prog(void) {
     }
 
     uint32_t addr = 0x80000;
+    uint8_t buf[8000];
+    memcpy(buf, "START:", 6);
 
     for (int i = 0; i < nbytes; i++) {
         uint8_t byte = uart_get8();
         PUT8(addr + i, byte);
+        buf[i + 6] = byte;
     }
+    memcpy(buf + 6 + nbytes, ":END", 4);
 
-    uint32_t *header = (void *)addr;
+    // uint32_t *header = (void *)addr;
+    uint32_t *header = (uint32_t *)&buf[6];
     // Confirm info in headers
-    assert(header[0] = 0x12345678);
+    assert(header[0] == 0x12345678);
     assert(header[2] == 0x80000);
 
     boot_put32(CODE_GOT);
 
-    // Should happen on client
-    BRANCHTO(0x80010);
+    sw_uart_putk_ignorenull(&u, buf, 8000);
+    // }
+    // BRANCHTO(0x80010);
 
     boot_put32(DONE);
 
@@ -65,6 +81,7 @@ void run_prog(void) {
 
 void notmain(void) {
     uart_init();
+    u = sw_uart_init(4, 5, 9600);
 
     wait_for_op(300 * 1000);
     unsigned op = boot_get32();

@@ -20,8 +20,8 @@ typedef struct {
 } shell_command_t;
 
 void send_prog(shell_command_t *cmd) {
-    if (cmd->ntoks < 1) {
-        output("Must supply a program to run\n");
+    if (cmd->ntoks < 2) {
+        output("Must supply a program and at least one pi to run\n");
         return;
     }
 
@@ -137,7 +137,7 @@ int command_loop() {
 }
 
 int main(int argc, char *argv[]) {
-    char *dev_name = find_ttyusb_last();
+    char *dev_name = find_ttyusb_last(); //"/dev/cu.usbserial-1130"; //
     if (!dev_name)
         panic("didn't find a device\n");
 
