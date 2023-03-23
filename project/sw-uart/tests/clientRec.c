@@ -25,7 +25,7 @@ void init(){
     system_enable_interrupts();
     
     // basically loop until connect to wifi returns something other than -1 
-    printk("Connect attempt: %d", connect_to_wifi(u));
+    //printk("Connect attempt: %d", connect_to_wifi(u));
     while(connect_to_wifi(u) == -1){
         delay_us(100000);
         printk("connecting... \n");

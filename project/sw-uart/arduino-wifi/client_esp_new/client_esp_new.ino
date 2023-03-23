@@ -299,7 +299,7 @@ void clean(){
  // drain the read buffer in case we are out of sync
  while(mySerial.available()){
    mySerial.read();
-   yield();
+  //make yield();
  }
 }
 

@@ -61,8 +61,11 @@ fd get_fd(uint8_t fnum){
 
 // returns the msg pointer (malloced already), free is an issue here that will need be handled later
 msg_t* get_msg(fd* fds){
+    printk("size of q: %d",fds->msg_q.cnt);
     if (Q_empty(&fds->msg_q)) panic("attempting to pop empty q in get_msg");
-    return Q_pop(&fds->msg_q);
+    msg_t* res = Q_pop(&fds->msg_q);
+    printk("size of q: %d",fds->msg_q.cnt);
+    return res;
 }
 
 int has_msg(fd* fds){
@@ -206,7 +209,7 @@ void recieveMsgHandler(){
 
         msg->curPckts = 0; // we havent seen a data packet yet
         // prepare the buffer for the message, not mallocing for headers: we strip those! 
-        msg->data = kmalloc(30*msg->totPckts +30);
+        msg->data = kmalloc(30*msg->totPckts);
      //   printk("succesfull return from cmnd msg\n");
         return; 
     }else{
@@ -236,6 +239,7 @@ void recieveMsgHandler(){
      if (msg->curPckts == msg->totPckts){
        // TODO run chksm 
       // printk("adding data\n");
+      printk("Adding msg\n ");
        add_msg(fds);
       }
 
