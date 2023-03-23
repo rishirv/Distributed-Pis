@@ -24,13 +24,43 @@ static void wait_for_op(unsigned usec_timeout) {
 }
 
 void run_prog(void) {
+    uint32_t nbytes = boot_get32();
+    uint32_t crc = boot_get32();
     uint32_t n = boot_get32();
     uint8_t pis[n];
-    for (int i = 0; i<n ;i++) {
+    for (int i = 0; i < n; i++) {
         pis[i] = uart_get8();
     }
+
     boot_put32(n);
-    (void) pis[0];
+    boot_put32(crc);
+
+    uint32_t op = boot_get32();
+    if (op != SEND_CODE) {
+        boot_err(BOOT_ERROR, "Expected PUT_CODE");
+        rpi_reboot();
+    }
+
+    uint32_t addr = 0x80000;
+
+    for (int i = 0; i < nbytes; i++) {
+        uint8_t byte = uart_get8();
+        PUT8(addr + i, byte);
+    }
+
+    uint32_t *header = (void *)addr;
+    // Confirm info in headers
+    assert(header[0] = 0x12345678);
+    assert(header[2] == 0x80000);
+
+    boot_put32(CODE_GOT);
+
+    // Should happen on client
+    // BRANCHTO(0x80010);
+
+    boot_put32(DONE);
+
+    (void)pis[0];
 }
 
 void notmain(void) {
@@ -42,6 +72,7 @@ void notmain(void) {
         boot_err(BOOT_ERROR, "Expected UNIX_READY");
         rpi_reboot();
     }
+    boot_put32(ACK);
 
     op = boot_get32();
     while (op != EXIT) {

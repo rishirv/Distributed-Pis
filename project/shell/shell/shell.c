@@ -28,6 +28,7 @@ void send_prog(shell_command_t *cmd) {
     char *prog = cmd->tokens[0];
     unsigned nbytes;
     uint8_t *code = read_file(&nbytes, prog);
+    uint32_t crc = crc32(code, nbytes);
 
     uint8_t pis[cmd->ntoks];
     for (int i = 1; i < cmd->ntoks; i++) {
@@ -35,11 +36,27 @@ void send_prog(shell_command_t *cmd) {
     }
 
     put_uint32(fd, cmd->command);
+    put_uint32(fd, nbytes);
+    put_uint32(fd, crc);
     put_uint32(fd, cmd->ntoks - 1);
     for (int i = 1; i < cmd->ntoks; i++) {
         put_uint8(fd, pis[i]);
     }
     ck_eq32(fd, "Expected equal arguments", cmd->ntoks - 1, get_uint32(fd));
+    ck_eq32(fd, "Expected equal checksums", crc, get_uint32(fd));
+
+    put_uint32(fd, SEND_CODE);
+    for (int i = 0; i < nbytes; i++) {
+        put_uint8(fd, code[i]);
+    }
+    ck_eq32(fd, "Expected CODE_GOT", CODE_GOT, get_uint32(fd));
+
+    uint32_t x = get_uint32(fd);
+    if (x == DONE) {
+        output("SUCCEESSSS");
+    } else {
+        output("FAILUREEE");
+    }
 
     free(code);
 }
@@ -84,11 +101,10 @@ int exec_command(shell_command_t *cmd) {
             return -1;
         case RUN:
             send_prog(cmd);
-            // x = get_uint32(fd);
-            // output("The x is %d\n", x);
-            // send_prog(cmd);
             break;
         case UPDATE:
+            break;
+        case LIST:
             break;
     }
 
@@ -150,6 +166,13 @@ int main(int argc, char *argv[]) {
         get_uint8(fd);
     }
     put_uint32(fd, UNIX_READY);
+    // Drain extra PI_READY
+    while ((op = get_uint32(fd)) == PI_READY) {
+        output("Found extra PI_READY, got <%x>: draining.\n", op);
+    }
+    if (op != ACK) {
+        panic("Did not get ACK from Pi\n");
+    }
 
     int res = 1;
     while (res != -1) {

@@ -8,4 +8,8 @@ enum SHELL_COMMANDS {
 enum SHELL_STATUS {
     PI_READY = 0xFF00,
     UNIX_READY,
+    ACK,
+    SEND_CODE,
+    CODE_GOT,
+    DONE,
 };
