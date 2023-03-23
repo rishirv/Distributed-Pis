@@ -13,7 +13,9 @@ PROGS = recieveServ.c
 #PROGS = sendClient.c
 #PROGS = 1-getc-test.c
 #PROGS = test_pi_serverinit.c
-
+PROGS = tests/connList/connList.c
+PROGS = tests/pingpong1.c
+PROGS = tests/sndRec_test1/recieveServ.c
 #once your sw-uart works: add sw-uart-veneer.c
  #COMMON_SRC += sw-uart-veneer.c
 COMMON_SRC += interrupts-c.c
@@ -22,6 +24,7 @@ COMMON_SRC += sw-uart.c
 COMMON_SRC += pi-esp.c
 COMMON_SRC += fds.c 
 COMMON_SRC += gpio-int.c
+
 # can use the staff code to see that things work.
 # STAFF_OBJS := staff-sw-uart.o
 
@@ -40,3 +43,23 @@ checkoff:
 
 clean::
 	make -C tests clean
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

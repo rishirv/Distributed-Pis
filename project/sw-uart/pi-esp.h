@@ -54,6 +54,9 @@ typedef struct esp_cmnd_pckt {
     uint8_t _sbz[13];
 } esp_cmnd_pckt_t;
 
+
+void system_init(int server);
+
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
 int client_init(sw_uart_t *u);
@@ -101,7 +104,7 @@ int connect_to_wifi(sw_uart_t *u);
 uint8_t is_connected(sw_uart_t *u);
 
 // For Server: Obtains a list of clients currently connected to server
-uint8_t *get_connected(void);
+int get_connected(uint8_t* buff);
 
 // TODO: Also add a method for client pi's to periodically check that they are connected to
 // the server and if not, reconnect!

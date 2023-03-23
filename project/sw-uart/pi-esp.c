@@ -2,6 +2,7 @@
 #include "spi.h"
 #include "sw-uart.h"
 #include "pi-esp.h"
+#include "rpi-interrupts.h"
 #include "fast-hash32.h"
 #include "constants.h"
 /* Commands encoded like so:
@@ -17,6 +18,28 @@ enum {
     ESP_NOACK               = 0b1001,
     ESP_GET_SERV_IP         =0b1010,
 };*/
+
+
+//inits everything needed depending on whether you are a server or client
+/*void system_init(int server){
+    gpio_set_input(RXPIN);
+    gpio_set_pullup(RXPIN);
+    gpio_set_output(TXPIN);
+
+    u = (sw_uart_t*) kmalloc(sizeof(sw_uart_t));
+    *u = sw_uart_init(TXPIN,RXPIN,9600);
+    
+    init_fileTable();
+    int_init();
+    gpio_int_falling_edge(RXPIN);
+    system_enable_interrupts();
+    
+    int success = 0;
+    if(server) success = server_init();
+    else success = client_init(u);
+
+    if (success == -1) panic("err, issue in initializing wifi. Check if esps are properly configured");
+}*/
 
 // As a client we only need to tell the esp to connect us to the server, if we cannot connect
 // we return a -1. Otherwise we set the localFD and serverFD globals 
@@ -52,14 +75,18 @@ int server_init(void) {
     // now wait on the fd status to change, need to timeout on this
     fd fds = get_fd(MAXFILES);
     int i = 0;
+
     while(fds.status == NONE){
        fds =  get_fd(MAXFILES);
+       i++;
+       if(i % 10000 == 0){
+
+    send_cmd(u,ESP_SERVER_INIT,MAXFILES,MAXFILES,NULL,0);
+       }
     }
-    printk("got status correctly\n");
     
     uint8_t status = get_status(&fds);
-
-    if(status != ESP_FAIL){
+    if(status != ESP_FAIL && status != NONE && status!=0xff){
         // set both globals as we are the server
         localFD = status;
         serverFD = status;
@@ -108,12 +135,13 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     header->size = nbytes;
 
     //For sanity checking
-    trace("CMD nybtes = %d\n", header->nbytes);
-    trace("CMD isCmd = %d\n", header->isCmd);
-    trace("CMD from = %d, to = %d\n", header->esp_From, header->esp_To);
-    trace("CMD cmnd = %d\n", header->cmnd);
-    trace("CMD size = %d\n", header->size);
-
+    if(TRACE){
+        trace("CMD nybtes = %d\n", header->nbytes);
+        trace("CMD isCmd = %d\n", header->isCmd);
+        trace("CMD from = %d, to = %d\n", header->esp_From, header->esp_To);
+        trace("CMD cmnd = %d\n", header->cmnd);
+        trace("CMD size = %d\n", header->size);
+    }
     // If nybtes is not 0, i.e. we have data to send too...create/send data packets!    
     uint32_t bytes_left = nbytes;
     char *data = (char *)bytes;
@@ -216,8 +244,7 @@ int connect_to_wifi(sw_uart_t *u) {
 
 // For Server: Obtains a list of clients currently connected to server
 
-uint8_t *get_connected(void) {
-    char* buff = (char*)kmalloc(sizeof(char)*16);
+int get_connected(uint8_t* buff) {
     memset(buff,0,16);
     send_cmd(u,ESP_GET_CONNECTED_LIST,0xf,0xf,0,0);
     
@@ -227,12 +254,17 @@ uint8_t *get_connected(void) {
         while(!has_status(&fds) )fds = get_fd(MAXFILES);
         uint8_t stat = get_status(&fds);
         if(stat == ESP_DONE) break;
+        // we shouldn't hit here, its a stopgap for now. 
+        if ( i == 16 ){
+            memset(buff,0,16);
+            return 0;
+        }
+
         buff[i] = stat;
         i++;
     }
 
-     return buff;
-
+    return i;
 }
 
 

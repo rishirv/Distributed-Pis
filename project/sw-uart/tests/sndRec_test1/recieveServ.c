@@ -23,8 +23,12 @@ void init(){
     int_init();
     gpio_int_falling_edge(21);
     system_enable_interrupts();
-    uint8_t servIP = server_init();
-    printk("server ip = %x\n",servIP);
+    
+    printk("init server:\n");
+    send_cmd(u,ESP_SEND_DATA,0xf,0xf,"DOES THIS WORK",25);
+   // int servIP = server_init();
+   // while(servIP == -1) servIP = server_init();
+   // printk("server ip = %x\n",servIP);
 }
 
 void notmain(void) {

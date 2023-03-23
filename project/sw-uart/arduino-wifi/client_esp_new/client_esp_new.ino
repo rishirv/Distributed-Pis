@@ -270,6 +270,7 @@ void clean(){
 // this will eventually extend parse between multiple To's, for now just assumes one buffer.
 void parsePacket(char* packet){
  // TODO: access the appropriate struct from array using esp->to field. 
+ // Serial.println("parsing paket\n");
   if(from_pi->runRdy){
     Serial.println("need to run current command before parsing new one");
     return clean();
@@ -376,6 +377,8 @@ void runCmnd(){
       break;
     case ESP_GET_CONNECTED_LIST:
       Serial.println("Got ESP_GET_CONNECTED_LIST");
+      get_connected_list();
+
       break;
     case ESP_GET_SERV_IP:
       Serial.println("Got ESP_GET_SERV_IP");
