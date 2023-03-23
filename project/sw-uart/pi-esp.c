@@ -15,17 +15,38 @@ enum {
     ESP_SERV_IP                 = 0b0111,
     ESP_ACK                 = 0b1000,
     ESP_NOACK               = 0b1001,
+    ESP_GET_SERV_IP         =0b1010,
 };*/
 
-/* Prompt the esp to init itself as a station aka client in its setup
-Note: might not use, might just flash client code to dedicated client esps */
-uint8_t client_init(sw_uart_t *u) {
-    return 1;
+// As a client we only need to tell the esp to connect us to the server, if we cannot connect
+// we return a -1. Otherwise we set the localFD and serverFD globals 
+int client_init(sw_uart_t *u) {
+    int stat = 0;
+    for(int i = 0; i < 5; i++){
+        stat = connect_to_wifi(u);
+        if (stat != -1) break;
+        delay_us(100000);
+    }  
+    
+    if(stat == -1) return stat;
+
+    send_cmd(u,0xf,0xf,ESP_GET_SERV_IP ,0,0);
+
+    fd fds = get_fd(MAXFILES);
+    while(!has_status(&fds));
+    int statS = get_status(&fds);
+    if (statS == ESP_FAIL) return -1;
+
+    // success on both accounts we can continue
+    localFD = stat;
+    serverFD = statS;
+    // server FD is obfuscated from user only return our FD 
+    return stat;
 }
 
 /* Prompt the esp to init itself as an access point aka server in its setup
 Note: might not use, might just flash server code to dedicated server esp */
-uint8_t server_init(void) {
+int server_init(void) {
     send_cmd(u,ESP_SERVER_INIT,MAXFILES,MAXFILES,NULL,0);
 
     // now wait on the fd status to change, need to timeout on this
@@ -33,16 +54,18 @@ uint8_t server_init(void) {
     int i = 0;
     while(fds.status == NONE){
        fds =  get_fd(MAXFILES);
-       /* if(i % 1000000 == 0){
-            for(int k = 0; k < 17; k++){
-                fd cur = get_fd(k);
-                printk("Status of %d = %x\n",k,cur.status);
-            }
-        }
-        i++;*/
     }
     printk("got status correctly\n");
-    return get_status(&fds);
+    
+    uint8_t status = get_status(&fds);
+
+    if(status != ESP_FAIL){
+        // set both globals as we are the server
+        localFD = status;
+        serverFD = status;
+        return status;
+    }
+    return -1;
 }
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
@@ -146,11 +169,32 @@ uint8_t send_cmd(sw_uart_t *u, uint8_t cmd, uint8_t to, uint8_t from, const void
     return 1; 
 }
 
-/* Receive data from esp by transferring 0's over SPI. Returns a buffer with the esp's
-response or null if unsuccessful.*/
-uint8_t receive_data_nbytes(sw_uart_t *u) {
+int sendProgram(uint8_t to, const void * bytes, uint32_t nbytes){
+    if (serverFD == 0) panic("attempting to send program without initializing server"); 
+
+    // NOTE honestly retrans and acking might not work well here, theres room for error in the pattern, not to mention we dont have an easy way of numbering so we can throw away duplicates on the other side.. thats lower level than this. Likely just going off of a high timeout would be enough. Not fast of course
+
+    // TODO consider sending some kind of ack req on repeat until it acks and lets us know its ready to recieve 
+    send_cmd(u,ESP_SEND_DATA,to,serverFD,bytes,nbytes);
+
+    // TODO wait for ack on a timeout .
     return 1;
 }
+
+void recProgram(){
+    if (serverFD == 0) panic("attempting to recieve program without initializing client");
+    
+    //TODO send an ACK to server to let it know we are ready
+
+    fd fds = get_fd(serverFD);
+    
+    while(!has_msg(&fds)) fds = get_fd(serverFD);
+    
+    //TODO do whatever we want to do with the program.. can return it if thats easiest
+    
+    //TODO send an ACK to let the serv know we got it and we are moving on
+}
+
 
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
 int connect_to_wifi(sw_uart_t *u) {
@@ -170,24 +214,24 @@ int connect_to_wifi(sw_uart_t *u) {
      return status;
 }
 
-// For Client: Returns whether or not this client pi's esp is connected to the server
-uint8_t is_connected(sw_uart_t *u) {
-    // Call send_cmd with ESP_IS_CONNECTED
-    // If return == -1, update fd field with no_ack
-    // otherwise, update fd field with ack 
-    return 1;
-}
-
 // For Server: Obtains a list of clients currently connected to server
 
 uint8_t *get_connected(void) {
-    // this would look like sending a command 
-    // checking to make sure we get an ack that the command was recieved (so wait on status for a minute refetching file descriptor) can set a timer and resend after a few seconds .. etc probably need to set up some kind of pattern but not priority
+    char* buff = (char*)kmalloc(sizeof(char)*16);
+    memset(buff,0,16);
+    send_cmd(u,ESP_GET_CONNECTED_LIST,0xf,0xf,0,0);
     
-    // now waiting to recieve an 8byte value.. this 8 byte value consists of 16 4bit
-    // TODO create an array that holds these values (make them uint8s) do so by looping thru the 8 bytes, to get the first part just left shift 4 to get the second just clear the upper 4 bits (but make sure to do so on copies or inline so you dont mess up the reference value for the second entry) If its 0 dont bother appending it to array that means it was not connected. 
+    fd fds = get_fd(MAXFILES);
+    int i = 0;
+    while (1){
+        while(!has_status(&fds) )fds = get_fd(MAXFILES);
+        uint8_t stat = get_status(&fds);
+        if(stat == ESP_DONE) break;
+        buff[i] = stat;
+        i++;
+    }
 
-     return NULL;
+     return buff;
 
 }
 

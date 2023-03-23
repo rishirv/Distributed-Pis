@@ -16,7 +16,7 @@
 
 #define SELF 0xf // use for to and from when sending a command to your own pi
 #define MAX_NCLIENTS 15
-
+#define ESP_DONE 0b11111
 enum { 
     ESP_CLIENT_INIT         = 0b0001,
     ESP_SERVER_INIT         = 0b0010,
@@ -24,7 +24,7 @@ enum {
     ESP_WIFI_CONNECT        = 0b0100,
     ESP_IS_CONNECTED        = 0b0101,
     ESP_GET_CONNECTED_LIST  = 0b0110,
-    ESP_SERV_IP                 = 0b0111,
+    ESP_GET_SERV_IP         = 0b0111,
     ESP_ACK                 = 0b1000,
     ESP_NOACK               = 0b1001,
 };
@@ -56,11 +56,13 @@ typedef struct esp_cmnd_pckt {
 
 /* Prompt the esp to init itself as a station aka client in its setup
 Note: might not use, might just flash client code to dedicated client esps */
-uint8_t client_init(sw_uart_t *u);
+int client_init(sw_uart_t *u);
+
+int sendProgram(uint8_t to, const void *bytes, uint32_t nbytes);
 
 /* Prompt the esp to init itself as an access point aka server in its setup
 Note: might not use, might just flash server code to dedicated server esp */
-uint8_t server_init(void);
+int server_init(void);
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
     Packet Headers (2 bytes) --> On every 32byte packet
@@ -94,14 +96,12 @@ uint8_t receive_data_nbytes(sw_uart_t *u);
 // For Client: Prompt client esp to connect to the server via Wifi.begin()
 int connect_to_wifi(sw_uart_t *u);
 
+//NOTE not implemented/used
 // For Client: Returns whether or not this client pi's esp is connected to the server
 uint8_t is_connected(sw_uart_t *u);
 
 // For Server: Obtains a list of clients currently connected to server
 uint8_t *get_connected(void);
-
-// TODO: If we have time, add a kill_client() method to kill a client in the event that
-// the server pi notices that a response from a client has timed out and it's time to kill!
 
 // TODO: Also add a method for client pi's to periodically check that they are connected to
 // the server and if not, reconnect!

@@ -67,9 +67,12 @@ msg_t* get_msg(fd* fds){
 
 int has_msg(fd* fds){
     //printk("hs msg curPckts: %d , Q_empty: %d\n", fds->cur_msg->curPckts, Q_empty(&fds->msg_q));
-    return Q_empty(&(fds->msg_q));
+    return !Q_empty(&(fds->msg_q));
 }
 
+int has_status(fd* fds){
+    return fds->status != NONE;
+}
 uint8_t get_status(fd* fds){
     uint8_t stat = fds->status;
     fds->status = NONE;

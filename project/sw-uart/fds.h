@@ -35,6 +35,8 @@ msg_t* get_msg(fd* fds);
 
 int has_msg(fd* fds);
 
+int has_status(fd* fds);
+
 uint8_t get_status(fd* fds);
 
 int add_msg(fd* fds);

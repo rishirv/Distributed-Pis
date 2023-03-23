@@ -38,7 +38,7 @@ void notmain(void) {
     //get what should be the client at fds 2
     fd fds = get_fd(0x2);
     for ( int i = 0; i < 10; i++ ){
-        while(has_msg(&fds)){
+        while(!has_msg(&fds)){
             fds=(get_fd(0x2));
         }
     msg_t* our_msg = get_msg(&fds);

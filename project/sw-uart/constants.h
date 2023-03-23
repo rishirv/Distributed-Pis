@@ -10,6 +10,8 @@
 #define RXPIN 21
 
 
+uint8_t localFD;
+uint8_t serverFD;
 sw_uart_t* u; 
 fd *fileTable;
 
