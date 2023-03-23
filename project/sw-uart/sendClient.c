@@ -53,7 +53,7 @@ void notmain(void) {
     for(int i = 0; i < 10; i++){
         delay_us(1000000);
         printk("sending\n");
-        send_cmd(u,ESP_SEND_DATA,0x1,0x2,"HELLO SERVER FROM CLIENT PI",27);
+        send_cmd(u,ESP_SEND_DATA,0x1,0x2,"HELLO SERVER FROM CLIENT PI",25);
     }
 
    /*

@@ -37,16 +37,18 @@ void notmain(void) {
     
     //get what should be the client at fds 2
     fd fds = get_fd(0x2);
-    while(has_msg(&fds)){
-        fds=(get_fd(0xa));
-    }
-
+    for ( int i = 0; i < 10; i++ ){
+        while(has_msg(&fds)){
+            fds=(get_fd(0x2));
+        }
     msg_t* our_msg = get_msg(&fds);
     
     printk("\n this is msg: \n");
-    for(int i = 0; i < 36; i++){
+    for(int i = 0; i < 28; i++){
         printk("%c",our_msg->data[i]);
     }
+    }
+
     printk("\n");
 
     trace("TRACE: done!\n");

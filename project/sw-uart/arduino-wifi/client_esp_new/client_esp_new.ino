@@ -208,6 +208,7 @@ void parseFromEsp(uint8_t from){
  /* if(!(pckt->esp_To > 16 && pckt->esp_From > 16)){
     Serial.println("something awry with packet");
   }*/
+  Serial.printf("relaying to Pi [%s]",(char*)buff);
   relay_to_pi(buff);
   free(buff);
 }
@@ -456,10 +457,14 @@ void loop() {
     if(server.hasClient()){
       client = server.accept();
       wifiArr[client.remoteIP()[3]&0b1111] = client;
+      Serial.println("got client");
     }
     
     for(int i = 0; i < 16; i++){
-      if(wifiArr[i] && wifiArr[i].available() > 31) parseFromEsp(i);
+      if(wifiArr[i] && wifiArr[i].available() > 31) {
+        Serial.println("parsing client;");
+        parseFromEsp(i);
+      }
       yield();
     }
 

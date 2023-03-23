@@ -149,7 +149,8 @@ void recieveMsgHandler(){
         printk("failed: %d",bytesRead);
         return;
     }
-
+    
+   // printk("got message %s\n",buff);
 
     // ######################## WE HAVE A MESSAGE ##############################
     // cast to a pck_cmnd_strct 
@@ -173,6 +174,7 @@ void recieveMsgHandler(){
     msg_t* msg = fds->cur_msg;
     // now parse the packet: is is a cmnd? 
       if(pckt->isCmd){
+         // printk("cmnd\n");
           //  If so is it an ACK/NOACK? : then change status line and return
         if(pckt->cmnd == ESP_ACK || pckt->cmnd == ESP_NOACK){
             fds->status = pckt->cmnd;
@@ -230,7 +232,7 @@ void recieveMsgHandler(){
       
      if (msg->curPckts == msg->totPckts){
        // TODO run chksm 
-       //printk("adding data");
+      // printk("adding data\n");
        add_msg(fds);
       }
 
