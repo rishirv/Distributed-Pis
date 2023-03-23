@@ -25,7 +25,6 @@ void init(){
     system_enable_interrupts();
     
     // basically loop until connect to wifi returns something other than -1 
-    //printk("Connect attempt: %d", connect_to_wifi(u));
     while(connect_to_wifi(u) == -1){
         delay_us(100000);
         printk("connecting... \n");
@@ -50,8 +49,8 @@ void notmain(void) {
     // so grab fds from 0xa
     fd fds = get_fd(1);
     
+    send_cmd(u,ESP_SEND_DATA,0x1,0x2,"ACK",4);
     while(!has_msg(&fds)){
-        send_cmd(u,ESP_SEND_DATA,0x1,0x2,"ACK",4);
         fds = get_fd(1);
         delay_us(100000);
     }
