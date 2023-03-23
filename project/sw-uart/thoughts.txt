@@ -19,3 +19,18 @@ I think we can dump regs, branch, come back and run the rest of the handler... w
 6. Okay at that point we would be like solid. But if time permits I might extend my blocking linked list to include blocking on fds. So then we could change it so we block on a fds with a timeout: if we see a status change or a message on the fds or the timeout occurs then we place it back on the queue. This rids us of the need for those annoying blocking loops. its kinda wonderful. 
 
 7. Okay then we could fuck around with sending a binary 
+
+#####################################################################
+
+
+// okay turn it into file descriptor structs 
+
+// then make sure we can send from server to client as well, just double check we have that functionality working 
+
+// extend the server parsing to work with an array of parsing objects - save that for later 
+
+// finally finish the return connected pis thing. 
+
+// then flush out the rest. 
+
+

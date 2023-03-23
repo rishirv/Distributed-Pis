@@ -121,8 +121,9 @@ sw_uart_t sw_uart_mk_helper(unsigned tx, unsigned rx,
     //     this is set!!
     gpio_set_function(tx,GPIO_FUNC_OUTPUT);
     gpio_set_function(rx,GPIO_FUNC_INPUT);
+    gpio_set_pullup(rx);
     //gpio_set_pullup(14);
-    gpio_write(14,1);
+    gpio_write(tx, 1);
     // check that the given values make sense.
     //
     // we give you the rest.

@@ -1,6 +1,11 @@
 #include "rpi.h"
 
+uint32_t *nbytes;
+uint8_t *buf;
+
 int fake_put(int c) {
+    *nbytes += 1;
+    *(buf++) = c;
     // MAJOR TODO: Write to buf instead and then send the data back to the server
     return c;
 }
@@ -16,6 +21,9 @@ void _loader_cstart() {
                 *bss++ = 0;
 
         rpi_putchar_set(fake_put);
+        nbytes = (void *) 0x1000000;
+        *nbytes = 0;
+        buf = (void *) nbytes + sizeof(*nbytes);
 
         notmain();
 

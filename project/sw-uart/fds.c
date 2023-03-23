@@ -61,15 +61,21 @@ fd get_fd(uint8_t fnum){
 
 // returns the msg pointer (malloced already), free is an issue here that will need be handled later
 msg_t* get_msg(fd* fds){
+    printk("size of q: %d",fds->msg_q.cnt);
     if (Q_empty(&fds->msg_q)) panic("attempting to pop empty q in get_msg");
-    return Q_pop(&fds->msg_q);
+    msg_t* res = Q_pop(&fds->msg_q);
+    printk("size of q: %d",fds->msg_q.cnt);
+    return res;
 }
 
 int has_msg(fd* fds){
     //printk("hs msg curPckts: %d , Q_empty: %d\n", fds->cur_msg->curPckts, Q_empty(&fds->msg_q));
-    return Q_empty(&(fds->msg_q));
+    return !Q_empty(&(fds->msg_q));
 }
 
+int has_status(fd* fds){
+    return fds->status != NONE;
+}
 uint8_t get_status(fd* fds){
     uint8_t stat = fds->status;
     fds->status = NONE;
@@ -149,7 +155,8 @@ void recieveMsgHandler(){
         printk("failed: %d",bytesRead);
         return;
     }
-
+    
+   // printk("got message %s\n",buff);
 
     // ######################## WE HAVE A MESSAGE ##############################
     // cast to a pck_cmnd_strct 
@@ -173,6 +180,7 @@ void recieveMsgHandler(){
     msg_t* msg = fds->cur_msg;
     // now parse the packet: is is a cmnd? 
       if(pckt->isCmd){
+         // printk("cmnd\n");
           //  If so is it an ACK/NOACK? : then change status line and return
         if(pckt->cmnd == ESP_ACK || pckt->cmnd == ESP_NOACK){
             fds->status = pckt->cmnd;
@@ -230,7 +238,8 @@ void recieveMsgHandler(){
       
      if (msg->curPckts == msg->totPckts){
        // TODO run chksm 
-       //printk("adding data");
+      // printk("adding data\n");
+      printk("Adding msg\n ");
        add_msg(fds);
       }
 
