@@ -231,11 +231,11 @@ int connect_to_wifi(sw_uart_t *u) {
     // okay now we want to wait on our fds 
     fd fds = get_fd(MAXFILES);
     // wait till we see a status change which marks either a success or fail 
-    while(fds.status == NONE) fds = get_fd(MAXFILES);
+    for (int i = 0; i < 1000 && fds.status == NONE; i++) fds = get_fd(MAXFILES);
     
     // gets and clears status 
     int status = get_status(&fds);
-    if (status == 0) return -1;
+    if (status == 0 || status == NONE) return -1;
     
     // otherwise set the esp_id with the status (this is our ip for from addr);
      return status;
