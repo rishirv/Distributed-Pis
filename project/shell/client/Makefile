@@ -9,7 +9,7 @@ COMMON_SRC += ../../../server-client-sw_uart/lib/sw-uart.c
 # RUN=1
 
 # define this if you need to give the device for your pi
-TTYUSB = /dev/cu.usbserial-11110
+TTYUSB = /dev/cu.usbserial-10
 BOOTLOADER = my-install
 
 include $(CS140E_2023_PATH)/libpi/mk/Makefile.template

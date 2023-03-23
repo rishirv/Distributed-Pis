@@ -4,6 +4,7 @@
 #include "sw-uart.h"
 #include "get-code.h"
 #include "constants.h"
+#include "pi-esp.h"
 
 sw_uart_t u;
 
@@ -31,6 +32,16 @@ void sw_uart_putk_ignorenull(sw_uart_t *uart, const char *msg, size_t len) {
     for (i = 0; i < len; i++) {
         sw_uart_put8(uart, msg[i]);
     }
+}
+
+void synchronize() {
+    wait_for_op(300 * 1000);
+    unsigned op = boot_get32();
+    if (op != UNIX_READY) {
+        boot_err(BOOT_ERROR, "Expected UNIX_READY");
+        rpi_reboot();
+    }
+    boot_put32(ACK);
 }
 
 void run_prog(void) {
@@ -70,6 +81,11 @@ void run_prog(void) {
 
     boot_put32(CODE_GOT);
 
+    // TODO: Test this
+    // for (int i = 0; i < n; i++) {
+        // sendProgram(pis[i], buf, nbytes);
+    // }
+
     sw_uart_putk_ignorenull(&u, buf, 8000);
     // }
     // BRANCHTO(0x80010);
@@ -83,19 +99,17 @@ void notmain(void) {
     uart_init();
     u = sw_uart_init(4, 5, 9600);
 
-    wait_for_op(300 * 1000);
-    unsigned op = boot_get32();
-    if (op != UNIX_READY) {
-        boot_err(BOOT_ERROR, "Expected UNIX_READY");
-        rpi_reboot();
-    }
-    boot_put32(ACK);
+    synchronize();
 
-    op = boot_get32();
+    uint32_t op = boot_get32();
     while (op != EXIT) {
         if (op == RUN) {
             run_prog();
-            // boot_put32(1234);
+        } else if (op == LIST) {
+            // TODO
+            // int n = get_connected();
+        } else if (op == UPDATE) {
+            // TODO
         }
         op = boot_get32();
     }
