@@ -1,5 +1,6 @@
 #include "rpi.h"
 
+// CircularQueue structure definition
 typedef struct {
     void *data;
     int elementSize;
@@ -9,6 +10,7 @@ typedef struct {
     int capacity;
 } CircularQueue;
 
+// Initialize the circular queue
 void initializeQueue(CircularQueue *queue, int elementSize, int capacity) {
     queue->elementSize = elementSize;
     queue->capacity = capacity;
@@ -18,14 +20,17 @@ void initializeQueue(CircularQueue *queue, int elementSize, int capacity) {
     queue->count = 0;
 }
 
+// Check if the circular queue is full
 unsigned isFull(CircularQueue *queue) {
     return queue->count == queue->capacity;
 }
 
+// Check if the circular queue is empty
 unsigned isEmpty(CircularQueue *queue) {
     return queue->count == 0;
 }
 
+// Calculate the modulus of two integers
 int mod(int dividend, int divisor) {
     int quotient = 0;
     while (dividend >= divisor) {
@@ -35,6 +40,7 @@ int mod(int dividend, int divisor) {
     return dividend;
 }
 
+// Enqueue an element into the circular queue
 unsigned enqueue(CircularQueue *queue, void *value) {
     if (isFull(queue)) {
         printk("Queue is full, cannot enqueue.\n");
@@ -46,6 +52,7 @@ unsigned enqueue(CircularQueue *queue, void *value) {
     return 1;
 }
 
+// Dequeue an element from the circular queue
 unsigned dequeue(CircularQueue *queue, void *value) {
     if (isEmpty(queue)) {
         printk("Queue is empty, cannot dequeue.\n");

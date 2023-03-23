@@ -1,4 +1,4 @@
-PROGS := hello-f.c 
+PROGS := job1.c 
 
 # use our own custom cstart
 COMMON_OBJS := loader-cstart.o

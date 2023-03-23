@@ -4,9 +4,10 @@
 #include "libc/fast-hash32.h"
 #include "circular-queue.c"
 #include "vector-base.h"
+#include "sw-uart.h"
 
-// client status bitfield
-static volatile unsigned clients = 0;
+/* // client status bitfield
+static volatile unsigned clients = 0xFFFFFFFF;
 
 enum client_status {
     BUSY,
@@ -37,7 +38,7 @@ void interrupt_vector(unsigned pc) {
 static int interrupt_fn_t(unsigned client_id) {
     set_client_status(client_id, AVAILABLE);
     return 1;
-}
+} */
 
 pi_file_t* read_function(char* name, fat32_fs_t *fs, pi_dirent_t *root) {
     printk("Looking for %s.\n", name);
@@ -65,19 +66,26 @@ pi_file_t* read_function(char* name, fat32_fs_t *fs, pi_dirent_t *root) {
     return f;
 }
 
+void sw_uart_putk_ignorenull(sw_uart_t *uart, const char *msg, size_t len) {
+    size_t i;
+    for (i = 0; i < len; i++) {
+        sw_uart_put8(uart, msg[i]);
+    }
+}
+
 // this is the "main" function for the server.
 void notmain(void) {
     // drivers
     uart_init();    
     kmalloc_init();
     pi_sd_init();
-    // queue
+/*     // queue
     CircularQueue queue;
     initializeQueue(&queue, sizeof(pi_file_t), 10);
     // interrupt vector
     extern uint32_t interrupt_vec[];
     vector_base_set((void *)interrupt_vec);
-
+ */
     printk("Reading the MBR.\n");
     mbr_t *mbr = mbr_read();
     printk("Loading the first partition.\n");
@@ -90,8 +98,8 @@ void notmain(void) {
     pi_dirent_t root = fat32_get_root(&fs);
 
     // manually load jobs from SD card
-    pi_file_t *jobOne = read_function("job1.bin", &fs, &root);
-    pi_file_t *jobTwo = read_function("job2.bin", &fs, &root);
+    pi_file_t *jobOne = read_function("JOB1.BIN", &fs, &root);
+/*     pi_file_t *jobTwo = read_function("job2.bin", &fs, &root);
     pi_file_t *jobThree = read_function("job3.bin", &fs, &root);
     enqueue(&queue, &jobOne);
     enqueue(&queue, &jobTwo);
@@ -114,7 +122,41 @@ void notmain(void) {
                 i = 0;
             }
         }
+    } */
+    
+    // round up to the nearest multiple of 4
+    char message[4096];
+    // copy the job into the message
+    memcpy(message, "START:", 6);
+    memcpy(message + 6, jobOne->data, jobOne->n_data);
+    memcpy(message + 6 + jobOne->n_data, ":END", 4);
+    // memcpy(message, jobOne->data, jobOne->n_data);
+
+    trace("about to use the sw-uart\n");
+    // use pin 20 for tx, 21 for rx
+    sw_uart_t u = sw_uart_init(20, 21, 9600);
+    // must set pullup!
+    gpio_set_pullup(21);
+
+/*     // send the message
+    while (1) {
+        sw_uart_putk_ignorenull(&u, message, 4096);
+
+        // wait for 1s for client reply
+        int res = sw_uart_get8_timeout(&u, 1000*1000);
+        if (res == 'X') {
+            break;
+        }
     }
+ */
+    // temp — client-to-sever isn't working
+    for (int i = 0; i < 3; i++) {
+        sw_uart_putk_ignorenull(&u, message, 4096);
+    }
+
+    // reset to using the hardware uart.
+    trace("Sever Done!\n");
+    clean_reboot();
 
     return;
 }

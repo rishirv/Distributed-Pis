@@ -25,7 +25,7 @@
 
 #include "rpi.h"
 #include "bzt-gpio.h"
-#include "uart.h"
+// #include "uart.h"
 /* #include "delays.h" */
 #include "bzt-sd.h"
 

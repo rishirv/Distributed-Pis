@@ -26,7 +26,7 @@ void notmain(void) {
 	printk("hello world from address %p\n", (void*)notmain);
 	printk("blinking 10 times...\n");
 
-	int led = 20;
+	int led = 0;
     gpio_set_output(led);
     for(int i = 0; i < 10; i++) {
         gpio_set_on(led);
