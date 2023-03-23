@@ -444,8 +444,6 @@ void setup() {
   from_pi->cmnd_pckt = (esp_cmnd_pckt*)malloc(sizeof(esp_cmnd_pckt));
 
   WiFi.mode(WIFI_STA); 
-  client_wifi_cnct();
-  client_wifi_cnct();
 }
 
 int i = 0;
