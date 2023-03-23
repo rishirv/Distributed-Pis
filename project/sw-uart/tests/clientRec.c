@@ -50,10 +50,9 @@ void notmain(void) {
     fd fds = get_fd(1);
     
     send_cmd(u,ESP_SEND_DATA,0x1,0x2,"ACK",4);
-    while(!has_msg(&fds)){
-        fds = get_fd(1);
-        delay_us(100000);
-    }
+    while(!Q_empty(&fileTable[1].msg_q));
+    
+
     char* buff = (char*) get_msg(&fds);
     printk("Recieved: %s \n",buff);
 
