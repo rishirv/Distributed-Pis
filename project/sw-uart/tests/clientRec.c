@@ -24,17 +24,21 @@ void init(){
     gpio_int_falling_edge(21);
     system_enable_interrupts();
     
-   // printk("init server:\n");
-  //  send_cmd(u,ESP_SEND_DATA,0xf,0xf,"DOES THIS WORK",25);
-    printk("about to inti server\n");
-    int servIP = server_init();
-  //  while(servIP == -1) servIP = server_init();
-    printk("server ip = %x\n",servIP);
+    // basically loop until connect to wifi returns something other than -1 
+    printk("Connect attempt: %d", connect_to_wifi(u));
+    while(connect_to_wifi(u) == -1){
+        delay_us(100000);
+        printk("connecting... \n");
+    }
+    printk("connected to wifi\n");
+    // then take what it returns and set our ip equal to it 
+
+    // then make a call to get server ip to get the server ip. 
+    // just hardcode it for now
+    
 }
 
 void notmain(void) {
-
-    printk("starting\n");
     init();
     trace("about to use the sw-uart\n");
     trace("if your pi locks up, it means you are not transmitting\n");
@@ -42,21 +46,17 @@ void notmain(void) {
     // BIG DEAL TODO : to make the uart global I made a constants file: it just has a u header but 
     // it does not init it (cant do it dynamically from a header), so we must be sure to malloc and init this on startup. (why? well we need it global for the interrupt handler else its really hard)  
     
-    //get what should be the client at fds 2
-    fd fds = get_fd(0x2);
-    for ( int i = 0; i < 10; i++ ){
-        while(!has_msg(&fds)){
-            fds=(get_fd(0x2));
-        }
-    msg_t* our_msg = get_msg(&fds);
+    // okayyy lets say to = 0xa and from  = 0xa (just to make this sane for myself) 
+    // so grab fds from 0xa
+    fd fds = get_fd(1);
     
-    printk("\n this is msg: \n");
-    for(int i = 0; i < 28; i++){
-        printk("%c",our_msg->data[i]);
-    }
+    while(!has_msg(&fds)){
+        send_cmd(u,ESP_SEND_DATA,0x1,0x2,"ACK",4);
+        fds = get_fd(1);
+        delay_us(10000);
     }
 
-    printk("\n");
+
 
     trace("TRACE: done!\n");
 }

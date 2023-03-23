@@ -21,10 +21,10 @@ enum {
 
 
 //inits everything needed depending on whether you are a server or client
-/*void system_init(int server){
-    gpio_set_input(RXPIN);
-    gpio_set_pullup(RXPIN);
-    gpio_set_output(TXPIN);
+void system_init(int server){
+    gpio_set_input(21);
+    gpio_set_pullup(21);
+    gpio_set_output(23);
 
     u = (sw_uart_t*) kmalloc(sizeof(sw_uart_t));
     *u = sw_uart_init(TXPIN,RXPIN,9600);
@@ -39,7 +39,7 @@ enum {
     else success = client_init(u);
 
     if (success == -1) panic("err, issue in initializing wifi. Check if esps are properly configured");
-}*/
+}
 
 // As a client we only need to tell the esp to connect us to the server, if we cannot connect
 // we return a -1. Otherwise we set the localFD and serverFD globals 
@@ -78,13 +78,9 @@ int server_init(void) {
 
     while(fds.status == NONE){
        fds =  get_fd(MAXFILES);
-       i++;
-       if(i % 10000 == 0){
-
-    send_cmd(u,ESP_SERVER_INIT,MAXFILES,MAXFILES,NULL,0);
        }
-    }
-    
+    printk("got status correctly\n");
+
     uint8_t status = get_status(&fds);
     if(status != ESP_FAIL && status != NONE && status!=0xff){
         // set both globals as we are the server
@@ -93,6 +89,9 @@ int server_init(void) {
         return status;
     }
     return -1;
+
+
+  
 }
 
 /* Send command and data from pi to esp in 32 byte packets with the following form:
@@ -245,26 +244,21 @@ int connect_to_wifi(sw_uart_t *u) {
 // For Server: Obtains a list of clients currently connected to server
 
 int get_connected(uint8_t* buff) {
-    memset(buff,0,16);
     send_cmd(u,ESP_GET_CONNECTED_LIST,0xf,0xf,0,0);
     
-    fd fds = get_fd(MAXFILES);
-    int i = 0;
-    while (1){
-        while(!has_status(&fds) )fds = get_fd(MAXFILES);
-        uint8_t stat = get_status(&fds);
-        if(stat == ESP_DONE) break;
-        // we shouldn't hit here, its a stopgap for now. 
-        if ( i == 16 ){
-            memset(buff,0,16);
-            return 0;
-        }
+    fd fds = get_fd(1);
+    while(!has_msg(&fds)) fds = get_fd(1);
 
-        buff[i] = stat;
-        i++;
-    }
+     buff = (uint8_t*)get_msg(&fds);
+    int k = 0;
+    for(int i = 0; i < 16; i ++){
+        printk("[%d]",buff[i]);
+//        if(buff[i] > 0) k++;
+    } 
 
-    return i;
+//    printk("returning\n");
+    
+    return k;
 }
 
 

@@ -9,7 +9,9 @@
 
 
 void notmain(void) {
+    printk("about to inti server\n");
     system_init(1);
+  //  while(servIP == -1) servIP = server_init();
     printk("finsihed init\n");
 
     trace("about to use the sw-uart\n");

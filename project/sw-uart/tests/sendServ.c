@@ -31,24 +31,30 @@ void init(){
   //  while(servIP == -1) servIP = server_init();
     printk("server ip = %x\n",servIP);
 }
+
 void notmain(void) {
+
+    printk("starting\n");
     init();
-    printk("succesfully got system inited\n");
     trace("about to use the sw-uart\n");
     trace("if your pi locks up, it means you are not transmitting\n");
+
+    // BIG DEAL TODO : to make the uart global I made a constants file: it just has a u header but 
+    // it does not init it (cant do it dynamically from a header), so we must be sure to malloc and init this on startup. (why? well we need it global for the interrupt handler else its really hard)  
    
-    int connections = 0;
-    uint8_t* buff = (uint8_t*)kmalloc(sizeof(uint8_t*)*16);
+    uint8_t pis[16];
+    memset(pis,0,16);
+    
+    fd fds;
     while(1){
-       connections = get_connected(buff);
-       if(connections > 0){
-           printk("Printing connections:\n");
-           for(int i =0; i<connections;i++){
-               printk("%d, ",buff[i]);
-           }
-           printk("\n\n");
-       }
-        delay_us(1000000);
+    for(int i = 0; i < 16; i++){
+        fds = get_fd(i);
+        if(!has_msg(&fds)) continue;
+        //we have a message
+        char* msg = (char*)get_msg(&fds);
+        if(strcmp(msg,"ACK")) printk("Got ACK from %d \n",i);
+        else printk("got %s form pi NOT expected",msg);
+        }
     }
 
     trace("TRACE: done!\n");

@@ -14,8 +14,14 @@ PROGS = recieveServ.c
 #PROGS = 1-getc-test.c
 #PROGS = test_pi_serverinit.c
 PROGS = tests/connList/connList.c
-PROGS = tests/pingpong1.c
+#PROGS = tests/pingpong1.c
 PROGS = tests/sndRec_test1/recieveServ.c
+PROGS = tests/connList/connList.c
+PROGS = tests/clientRec.c
+PROGS = tests/sendServ.c
+
+
+#PROGS = tests/sndRec_test1/recieveServ.c
 #once your sw-uart works: add sw-uart-veneer.c
  #COMMON_SRC += sw-uart-veneer.c
 COMMON_SRC += interrupts-c.c

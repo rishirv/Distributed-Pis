@@ -9,7 +9,7 @@
 #define ESP_FAIL 0b0000
 #define ESP_DONE 0b11111
 
-#define SERVER 1
+#define SERVER 0
 
 enum { 
     ESP_SERVER_INIT         = 0b0010,
@@ -123,13 +123,49 @@ void get_connected_list(){
     if(wifiArr[i]){
       buff[k] = wifiArr[i].remoteIP()[3]&0b1111;
       k++;
-    }
+    }else(buff[i] = 0);
   }
 
-  for(int i = 0; i < k; i++){
-      write_msg_pi(buff[i]);
+  Serial.printf("data send to pi \n");
+  for(int i = 0; i < 16; i++){
+    Serial.printf("%d ",buff[i]);
   }
-  write_msg_pi(ESP_DONE);
+  // we know its always going have a specific cmnd packet
+  esp_cmnd_pckt* cmd_pckt = (esp_cmnd_pckt*) malloc(sizeof(esp_cmnd_pckt));
+  memset(cmd_pckt,0,32);
+  cmd_pckt->nbytes = 9;
+  cmd_pckt->cmnd = 0xf;
+  cmd_pckt->isCmd = 1;
+  cmd_pckt->esp_From = 1;
+  cmd_pckt->esp_To = 1;
+  cmd_pckt->size = 16;
+  //memset(cmd_pckt.data,msg,nbytes);
+
+  //cast and send the cmd packet.
+  esp_cmnd_pckt* cmd_pp= cmd_pckt;
+  char* cmd_p = (char*)cmd_pp;
+  for(int i = 0; i <32;i++){
+    mySerial.write(cmd_p[i]);
+  }
+
+  esp_pckt* data_pckt = (esp_pckt*)malloc(sizeof(esp_pckt));
+  memset(data_pckt,0,32);
+  memcpy(data_pckt->data,buff,16);
+  data_pckt->nbytes = 16;
+  data_pckt->isCmd = 0;
+  data_pckt->esp_From = 1;
+  data_pckt->esp_To = 1;
+  memcpy(data_pckt->data,"ABCDEFGHIJKLMNOP",16);
+  //memset(cmd_pckt.data,msg,nbytes);
+  for (int i = 0; i < 16; i++){
+    Serial.printf("%c",data_pckt->data[i]);
+  }
+  //cast and send the cmd packet.
+  esp_pckt* data_pp= data_pckt;
+  char* data_p = (char*)data_pp;
+  for(int i = 0; i <32;i++){
+    mySerial.write(data_p[i]);
+  }
   
 }
 
@@ -228,7 +264,7 @@ void write_msg_pi(uint8_t data){
   // we know its always going have a specific cmnd packet
   esp_cmnd_pckt cmd_pckt;
   memset(&cmd_pckt,0,32);
-  cmd_pckt.nbytes = 9;
+  cmd_pckt.nbytes = 15;
   cmd_pckt.cmnd = data;
   cmd_pckt.isCmd = 1;
   cmd_pckt.esp_From = PISPEC;
@@ -378,7 +414,6 @@ void runCmnd(){
     case ESP_GET_CONNECTED_LIST:
       Serial.println("Got ESP_GET_CONNECTED_LIST");
       get_connected_list();
-
       break;
     case ESP_GET_SERV_IP:
       Serial.println("Got ESP_GET_SERV_IP");

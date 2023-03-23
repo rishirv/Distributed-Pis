@@ -206,7 +206,7 @@ void recieveMsgHandler(){
 
         msg->curPckts = 0; // we havent seen a data packet yet
         // prepare the buffer for the message, not mallocing for headers: we strip those! 
-        msg->data = kmalloc(30*msg->totPckts);
+        msg->data = kmalloc(30*msg->totPckts +30);
      //   printk("succesfull return from cmnd msg\n");
         return; 
     }else{
