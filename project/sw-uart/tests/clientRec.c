@@ -51,10 +51,10 @@ void notmain(void) {
     
     send_cmd(u,ESP_SEND_DATA,0x1,0x2,"ACK",4);
     while(!Q_empty(&fileTable[1].msg_q));
-    
 
-    char* buff = (char*) get_msg(&fds);
-    printk("Recieved: %s \n",buff);
+
+    msg_t* buff = get_msg(&fds);
+    printk("Recieved: %s \n",buff->data);
 
 
     trace("TRACE: done!\n");

@@ -54,9 +54,9 @@ void notmain(void) {
         //char* msg = (char*)get_msg(&fds);
         if(strcmp(msg->data,"ACK")==0) {
             printk("Got ACK from %d \n",i);
-           // send_cmd(u,ESP_SEND_DATA,i,0x1,"SENT DATA FROM SERVER",25);
+            send_cmd(u,ESP_SEND_DATA,i,0x1,"SENT DATA FROM SERVER",25);
             //msg = NULL;
-            //break;
+            break;
         }
 
         else printk("got %d from pi NOT expected\n",i);
