@@ -9,7 +9,7 @@
 #define ESP_FAIL 0b0000
 
 
-#define SERVER 0
+#define SERVER 1
 
 enum { 
     ESP_SERVER_INIT         = 0b0010,
@@ -205,9 +205,9 @@ void parseFromEsp(uint8_t from){
   }
 
   esp_cmnd_pckt* pckt = (esp_cmnd_pckt*)buff;
-  if(!(pckt->esp_To > 16 && pckt->esp_From > 16)){
+ /* if(!(pckt->esp_To > 16 && pckt->esp_From > 16)){
     Serial.println("something awry with packet");
-  }
+  }*/
   relay_to_pi(buff);
   free(buff);
 }
@@ -221,7 +221,7 @@ void send_nack(){
 // TODO: take in which pi_buffer we should be looking at, i.e the esp_to 
 void send_msg(){
   // HARDCODED
-  Serial.println("sending hardcoded message");
+  /*Serial.println("sending hardcoded message");
   
   // TODO possibly dont need this line either - also delete hardcoding
   while(!client.connected()) client.connect(serverIP,1001);
@@ -229,23 +229,25 @@ void send_msg(){
       client.write("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDE",32);
       Serial.println("sent message");
    
-  return;
+  return;*/
   // 
-  WiFiClient curClient;
-  if(SERVER){
+  while(!client.connected()) client.connect(serverIP,1001);
+  //TODO fix up for server once test passes
+  /*if(SERVER){
     //curClient = getClient(from_pi->cmnd_pckt->esp_To);
     curClient = client;
   }else{
     curClient = client; 
-  }
+  }*/
+  
   char* cmnd_pckt = (char*)from_pi->cmnd_pckt;
   for(int i = 0; i < 32;i++){
-    curClient.write(cmnd_pckt[i]);
+    client.write(cmnd_pckt[i]);
   }
   char* data = (char*)from_pi->buff;
   for(int i = 0; i < from_pi->numPckts;i++){
     for (int k = 0; k < 32;k++){
-      curClient.write(data[k+(i*k)]);
+      client.write(data[k+(i*k)]);
     }
   }
 };
