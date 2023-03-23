@@ -3,6 +3,7 @@ PROGS := server.c
 COMMON_SRC := get-code.c
 
 CFLAGS += -I..
+CFLAGS += -I../../sw-uart
 
 # uncomment if you want it to automatically run.
 # RUN=1

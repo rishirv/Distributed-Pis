@@ -33,6 +33,10 @@ void send_prog(shell_command_t *cmd) {
     uint8_t pis[cmd->ntoks];
     for (int i = 1; i < cmd->ntoks; i++) {
         pis[i] = atoi(cmd->tokens[i]);
+        if (pis[i] > 0xF) {
+            output("Each pi id is at most 4 bits\n");
+            return;
+        }
     }
 
     put_uint32(fd, cmd->command);
@@ -101,8 +105,10 @@ int exec_command(shell_command_t *cmd) {
             send_prog(cmd);
             break;
         case UPDATE:
+            put_uint32(fd, cmd->command);
             break;
         case LIST:
+            put_uint32(fd, cmd->command);
             break;
     }
 
@@ -136,8 +142,25 @@ int command_loop() {
     return res;
 }
 
+void synchronize() {
+    uint32_t op;
+    while ((op = get_uint32(fd)) != PI_READY) {
+        output("expected initial PI_READY, got <%x>: discarding.\n", op);
+        // have to remove just one byte since if not aligned, stays not aligned
+        get_uint8(fd);
+    }
+    put_uint32(fd, UNIX_READY);
+    // Drain extra PI_READY
+    while ((op = get_uint32(fd)) == PI_READY) {
+        output("Found extra PI_READY, got <%x>: draining.\n", op);
+    }
+    if (op != ACK) {
+        panic("Did not get ACK from Pi\n");
+    }
+}
+
 int main(int argc, char *argv[]) {
-    char *dev_name = find_ttyusb_last(); //"/dev/cu.usbserial-1130"; //
+    char *dev_name = "/dev/cu.usbserial-110";
     if (!dev_name)
         panic("didn't find a device\n");
 
@@ -157,26 +180,12 @@ int main(int argc, char *argv[]) {
     simple_boot(fd, code, nbytes);
     free(code);
 
-    uint32_t op;
-    while ((op = get_uint32(fd)) != PI_READY) {
-        output("expected initial PI_READY, got <%x>: discarding.\n", op);
-        // have to remove just one byte since if not aligned, stays not aligned
-        get_uint8(fd);
-    }
-    put_uint32(fd, UNIX_READY);
-    // Drain extra PI_READY
-    while ((op = get_uint32(fd)) == PI_READY) {
-        output("Found extra PI_READY, got <%x>: draining.\n", op);
-    }
-    if (op != ACK) {
-        panic("Did not get ACK from Pi\n");
-    }
+    synchronize();
 
     int res = 1;
     while (res != -1) {
         res = command_loop();
     }
 
-    // send_command(exits);
     output("Exiting shell\n");
 }
