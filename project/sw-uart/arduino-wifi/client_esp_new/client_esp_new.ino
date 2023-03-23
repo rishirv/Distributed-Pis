@@ -9,7 +9,7 @@
 #define ESP_FAIL 0b0000
 #define ESP_DONE 0b11111
 
-#define SERVER 0
+#define SERVER 1
 
 enum { 
     ESP_SERVER_INIT         = 0b0010,

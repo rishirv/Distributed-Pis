@@ -52,7 +52,12 @@ void notmain(void) {
         if(!has_msg(&fds)) continue;
         //we have a message
         char* msg = (char*)get_msg(&fds);
-        if(strcmp(msg,"ACK")) printk("Got ACK from %d \n",i);
+        if(strcmp(msg,"ACK")) {
+            printk("Got ACK from %d \n",i);
+            send_cmd(u,ESP_SEND_DATA,i,0x1,"SENT DATA FROM SERVER",25);
+            break;
+        }
+
         else printk("got %s form pi NOT expected",msg);
         }
     }

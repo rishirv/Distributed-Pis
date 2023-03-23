@@ -17,7 +17,7 @@ void init(){
 
     u = (sw_uart_t*) kmalloc(sizeof(sw_uart_t));
     *u = sw_uart_init(23,21,9600);
-    char* buff = kmalloc(sizeof(char) * 32);
+    //char* buff = kmalloc(sizeof(char) * 32);
     
     init_fileTable();
     int_init();
@@ -53,9 +53,10 @@ void notmain(void) {
     while(!has_msg(&fds)){
         send_cmd(u,ESP_SEND_DATA,0x1,0x2,"ACK",4);
         fds = get_fd(1);
-        delay_us(10000);
+        delay_us(100000);
     }
-
+    char* buff = (char*) get_msg(&fds);
+    printk("Recieved: %s \n",buff);
 
 
     trace("TRACE: done!\n");
