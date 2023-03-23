@@ -53,7 +53,7 @@ void notmain(void) {
     while(!Q_empty(&fileTable[1].msg_q));
 
 
-    msg_t* buff = get_msg(&fds);
+    msg_t* buff = Q_pop(&fileTable[1].msg_q);
     printk("Recieved: %s \n",buff->data);
 
 
