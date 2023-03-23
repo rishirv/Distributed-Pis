@@ -193,7 +193,7 @@ void relay_to_pi( char* buff){
 
 void parseFromEsp(uint8_t from){
 
- client = wifiArr[from];  
+ client = wifiArr[from]`;  
   // TODO , possibly need to remove this line. 
   if (client.available()< 32) return;
 
