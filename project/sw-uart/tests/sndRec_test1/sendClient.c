@@ -25,10 +25,17 @@ void init(){
     system_enable_interrupts();
     
     // basically loop until connect to wifi returns something other than -1 
+    printk("Connect attempt: %d", connect_to_wifi(u));
+    while(connect_to_wifi(u) == -1){
+        delay_us(100000);
+        printk("connecting... \n");
+    }
+    printk("connected to wifi\n");
     // then take what it returns and set our ip equal to it 
 
     // then make a call to get server ip to get the server ip. 
     // just hardcode it for now
+    
 }
 
 void notmain(void) {
@@ -44,9 +51,9 @@ void notmain(void) {
     fd fds = get_fd(1);
 
     for(int i = 0; i < 10; i++){
-        delay_us(10000);
+        delay_us(1000000);
         printk("sending\n");
-        send_cmd(u,ESP_SEND_DATA,0x1,0x2,"HELLO SERVER FROM CLIENT PI",27);
+        send_cmd(u,ESP_SEND_DATA,0x1,0x2,"HELLO SERVER FROM CLIENT PI",25);
     }
 
    /*
