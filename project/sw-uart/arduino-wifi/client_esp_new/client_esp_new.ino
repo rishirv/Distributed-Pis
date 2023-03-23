@@ -9,7 +9,7 @@
 #define ESP_FAIL 0b0000
 
 
-#define SERVER 1
+#define SERVER 0
 
 enum { 
     ESP_SERVER_INIT         = 0b0010,
@@ -21,6 +21,8 @@ enum {
     ESP_ACK                 = 0b1000,
     ESP_NOACK               = 0b1001,
 };
+
+WiFiClient wifiArr[16];
 
 const char* ssid = "poop";
 const char* password = "password";
@@ -127,104 +129,7 @@ WiFiClient client13;
 WiFiClient client14;
 WiFiClient client15;
 
-// tediously updates the global clients... sad times
-void updateList(uint8_t to){
-  if (to > 15){
-    Serial.println("err invalid esp to in update list");
-    return;
-  }
-  switch(to){
-      case 1:
-        client1 = client;
-        break;
-      case 2:
-        client2 = client;
-        break;
-      case 3:
-        client3 = client;
-        break;
-      case 4:
-        client4 = client;
-        break;
-      case 5:
-        client5 = client;
-        break;
-      case 6:
-        client6 = client;
-        break;
-      case 7:
-        client7 = client;
-        break;
-      case 8:
-        client8 = client;
-        break;
-      case 9:
-        client9 = client;
-        break;
-      case 10:
-        client10 = client;
-        break;
-      case 11:
-        client11 = client;
-        break;
-      case 12:
-        client12 = client;
-        break;
-      case 13:
-        client13 = client;
-        break;
-      case 14:
-        client14 = client;
-        break;
-      case 15:
-        client15 = client;
-        break;  
-      default:
-        Serial.println("invalid id?");
-        break;
-  }
-}
 
-WiFiClient getClient(uint8_t to){
-  if (to > 15 || to == 0){
-    Serial.println("err invalid esp to in getClient");
-    return client;
-  }
-  switch(to){
-      case 1:
-        return client1;
-      case 2:
-        return client2;
-      case 3:
-        return client3;
-      case 4:
-        return client4;
-      case 5:
-        return client5;
-      case 6:
-       return client6;
-      case 7:
-        return client7;
-      case 8:
-        return client8;
-      case 9:
-       return client9;
-      case 10:
-        return client10;
-      case 11:
-        return client11;
-      case 12:
-        return client12;
-      case 13:
-        return client13;
-      case 14:
-        return client14;
-      case 15:
-        return client15;
-  }
-  Serial.println("err fell through");
-  return client;
-}
 
 void get_connected_list(){
   // first send an ack to the pi to let it know we are working on it
@@ -251,7 +156,6 @@ void get_connected_list(){
 // should be fine being left in on client code since it wont do anything until we begin the server in 
 // server init
 WiFiServer server(1001);
-
 
 
 // begins the server
@@ -287,24 +191,22 @@ void relay_to_pi( char* buff){
   }
 };
 
-void parseFromEsp(){
-  Serial.printf("Client gets: %d\n",client.available());
+void parseFromEsp(uint8_t from){
+
+ client = wifiArr[from];  
+  // TODO , possibly need to remove this line. 
   if (client.available()< 32) return;
-  Serial.println("got some stuff from esp in parse");
+
+  //Serial.println("got some stuff");
   char* buff = (char*)malloc(sizeof(char)*32);
+
   for(int i = 0;i<32;i++){
     buff[i] = client.read();   
-    Serial.printf("%c",buff[i]);
   }
-  // TAKE OUT WHEN DONE 
-  Serial.println("\nreturning from parse");
-  return;
 
   esp_cmnd_pckt* pckt = (esp_cmnd_pckt*)buff;
-  if(!(pckt->esp_To < 16 && pckt->esp_From < 16)){
+  if(!(pckt->esp_To > 16 && pckt->esp_From > 16)){
     Serial.println("something awry with packet");
-  }else if(SERVER){
-   // updateList(pckt->esp_From);
   }
   relay_to_pi(buff);
   free(buff);
@@ -320,11 +222,13 @@ void send_nack(){
 void send_msg(){
   // HARDCODED
   Serial.println("sending hardcoded message");
-  while(!client.connected()) client.connect(serverIP,1001);
-
-    client.write("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEQ");
-    Serial.println("sent message");
   
+  // TODO possibly dont need this line either - also delete hardcoding
+  while(!client.connected()) client.connect(serverIP,1001);
+  
+      client.write("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDE",32);
+      Serial.println("sent message");
+   
   return;
   // 
   WiFiClient curClient;
@@ -540,6 +444,8 @@ void setup() {
   from_pi->cmnd_pckt = (esp_cmnd_pckt*)malloc(sizeof(esp_cmnd_pckt));
 
   WiFi.mode(WIFI_STA); 
+  client_wifi_cnct();
+  client_wifi_cnct();
 }
 
 int i = 0;
@@ -547,27 +453,24 @@ void loop() {
   
   // parsing any message from the esp as a server
   if (SERVER){
-    client = server.available();
-    if (client){
-      Serial.println("got something from esp");
-      Serial.printf("cleint in loop has %d\n",client.available());
-      return parseFromEsp();
+    if(server.hasClient()){
+      client = server.accept();
+      wifiArr[client.remoteIP()[3]&0b1111] = client;
     }
-  }else{
-      if(client.available()>31) {
-        return parseFromEsp();
-      }
+    
+    for(int i = 0; i < 16; i++){
+      if(wifiArr[i] && wifiArr[i].available() > 31) parseFromEsp(i);
+      yield();
     }
 
+  }
+
   // todo : run thru a list of these structs and pass the approrpiate one to runCmnd
+
   if(from_pi->runRdy) return runCmnd();
   if(mySerial.available() > 31){
     Serial.println("got packet");
    return parseNreadPckt();
   }
-  //if(i%500000 == 0){
-   // Serial.println("writing message");
-  //write_msg_pi(0b1111);
-  //}
-//  i++;
+  i++;
 }
