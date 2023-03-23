@@ -1,0 +1,80 @@
+Pi to ESP Communication Protocol
+
+When sending from both pi to esp and esp to pi data and commands are sent in 32 bytes 
+packets. The general idea is that a command packet is always sent from the pi to the 
+esp FIRST, followed by data packets. Commands might be something like "connect to wifi"
+or "send data" and will be encoded with 4 bits like so:
+
+
+enum { 
+    ESP_CLIENT_INIT         = 0b0001,
+    ESP_SERVER_INIT         = 0b0010,
+    ESP_SEND_DATA           = 0b0011,
+    ESP_WIFI_CONNECT        = 0b0100,
+    ESP_IS_CONNECTED        = 0b0101,
+    ESP_GET_CONNECTED_LIST  = 0b0110,
+    ESP_NOP                 = 0b0111,
+    ESP_ACK                 = 0b1000,
+};
+
+Both data and command packets have a 2 bytes header with the following info:
+
+- Packet Header format:
+
+    Packet Headers (2 bytes) --> On every 32byte packet
+    4 bits: To
+    4 bits: From
+    1 bit: isCmd
+    5 bits: nbytes (in packet)
+    2 bits: SBZ
+    If isCmd: remaining bytes used for
+    4 bytes --> Size of data being sent (2GB)
+    1 bytes --> The actual Cmd (like connect to wifi or whatever)
+    4 bytes --> Check sum of all the data
+
+    Top 2 bytes of 32 byte packet:
+
+    bits:    15 14 13 12 11   10  9 8 7 6 5 4 3 2 1 0
+             | nbytes      |isCmd| from  | to    |sbz|
+    byte:               31                 30
+
+    Remaining bytes 29-0 are either data or the following if a command packet:
+    
+    byte:    29 28 27 26  25  24 23 22 21 20 ... 0
+             | totalsize |cmd| checksum  |        |
+
+We need to ensure several things when sending commands/data between the pi and esp:
+
+1) The command packet is always sent first before the data that follows
+2) All data is transmitted and received with a matching checksum to that sent in
+the command packet (bytes 24-21)
+
+If anything gets fucked up along the way (e.g. the esp received a data packet without
+a preceding command packet, or the checksum doesn't match), we need a way to notify
+the pi that it should try again. To achieve this we will use acks/no-acks.
+
+More clearly, if the pi sends a command and all data packets successfully then the esp
+will send an ACK command back, acknowledging that it was successful. If something fails
+the esp will notify the pi by triggering an interrupt. The corresponding interrupt
+handler will simply set a global indicating that the pi needs to try again once it's
+done with this transmission. After the interrupt the pi will resume sending, check the
+global, and then try again if need be.
+
+Rough Outline of Protocol for Testing Before We Incorporate Interrupts:
+
+        PI:                                      ESP:
+
+1. sends cmd packet
+                                                 2. gets the packet and checks isCmd
+                                                    IF NOT, sends no-ack back?
+                                                    ELSE, computes and saves a checksum
+                                                    and sends a ready message back
+3. loops for nbytes and sends
+remaining data to esp, then waits
+for esp to send an ack back
+                                                 4. esp reads data, expects nbytes.
+                                                    If checksum doesn't match or
+                                                    less than nbytes received, send noack
+                                                    Else, send ack!
+5. If no-ack received, try again!
+

@@ -1,0 +1,21 @@
+
+########################################
+
+Need to write a few test cases:
+
+1. send something from one pi, wait to recieve that on the other pi
+... More robustly must make a method to figure out the server ip on the client pi 
+then we know whcih fd to check
+
+2. theres a handful of tests/ fuller usage of the status updating from esp to pi. The test I currently have (connecting to wifi then getting our fds back via status on the fd should be decent enough test)
+
+3. getting close: now shore up whatever is necessary to ping pong between pis
+
+4. extend to a 3 way ping pong. Now we dont have multithreading so just sorta alternate on the pi server betwen listening to one and then the other
+
+5. now wild times: drop us into the multithreading .. shoudl just require at basic eiditng the irq handler to conditionally branch to execute our listening routine... 
+I think we can dump regs, branch, come back and run the rest of the handler... will have to test on timing, we have like 100 us though sooo thats plenty of time to mess with. 
+
+6. Okay at that point we would be like solid. But if time permits I might extend my blocking linked list to include blocking on fds. So then we could change it so we block on a fds with a timeout: if we see a status change or a message on the fds or the timeout occurs then we place it back on the queue. This rids us of the need for those annoying blocking loops. its kinda wonderful. 
+
+7. Okay then we could fuck around with sending a binary 
