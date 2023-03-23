@@ -6,16 +6,12 @@
 
 #include "libunix.h"
 #include "simple-boot.h"
+#include "constants.h"
 
 int fd;
-int trace_p = 1;
+int trace_p = 0;
 
 #define MAX_TOKENS 100
-
-enum SHELL_COMMANDS {
-    EXIT,
-    RUN
-};
 
 typedef struct {
     int command;
@@ -23,18 +19,30 @@ typedef struct {
     char *tokens[MAX_TOKENS];
 } shell_command_t;
 
-// void send_prog(shell_command_t *cmd) {
-//     if (cmd->ntoks < 1) {
-//         output("Must supply a program to run\n");
-//         return;
-//     }
-//     char *prog = cmd->tokens[0];
-//     unsigned nbytes;
+void send_prog(shell_command_t *cmd) {
+    if (cmd->ntoks < 1) {
+        output("Must supply a program to run\n");
+        return;
+    }
 
-//     uint8_t *code = read_file(&nbytes, prog);
+    char *prog = cmd->tokens[0];
+    unsigned nbytes;
+    uint8_t *code = read_file(&nbytes, prog);
 
-//     simple_boot(fd, code, nbytes);
-// }
+    uint8_t pis[cmd->ntoks];
+    for (int i = 1; i < cmd->ntoks; i++) {
+        pis[i] = atoi(cmd->tokens[i]);
+    }
+
+    put_uint32(fd, cmd->command);
+    put_uint32(fd, cmd->ntoks - 1);
+    for (int i = 1; i < cmd->ntoks; i++) {
+        put_uint8(fd, pis[i]);
+    }
+    ck_eq32(fd, "Expected equal arguments", cmd->ntoks - 1, get_uint32(fd));
+
+    free(code);
+}
 
 int parse_line(char *line, shell_command_t *cmd) {
     char *delim = " ";
@@ -45,6 +53,10 @@ int parse_line(char *line, shell_command_t *cmd) {
         cmd->command = EXIT;
     } else if (strcmp(token, "run") == 0) {
         cmd->command = RUN;
+    } else if (strcmp(token, "update") == 0) {
+        cmd->command = UPDATE;
+    } else if (strcmp(token, "list") == 0) {
+        cmd->command = LIST;
     } else {
         output("Unrecognized command: %s\n", token);
         return -1;
@@ -64,11 +76,19 @@ int parse_line(char *line, shell_command_t *cmd) {
 }
 
 int exec_command(shell_command_t *cmd) {
+    uint32_t x;
+
     switch (cmd->command) {
         case EXIT:
+            put_uint32(fd, cmd->command);
             return -1;
         case RUN:
+            send_prog(cmd);
+            // x = get_uint32(fd);
+            // output("The x is %d\n", x);
             // send_prog(cmd);
+            break;
+        case UPDATE:
             break;
     }
 
@@ -117,6 +137,19 @@ int main(int argc, char *argv[]) {
     fd = set_tty_to_8n1(tty, baud_rate, timeout_tenths);
     if (fd < 0)
         panic("could not set tty: <%s>\n", dev_name);
+
+    unsigned nbytes;
+    uint8_t *code = read_file(&nbytes, "server.bin");
+    simple_boot(fd, code, nbytes);
+    free(code);
+
+    uint32_t op;
+    while ((op = get_uint32(fd)) != PI_READY) {
+        output("expected initial PI_READY, got <%x>: discarding.\n", op);
+        // have to remove just one byte since if not aligned, stays not aligned
+        get_uint8(fd);
+    }
+    put_uint32(fd, UNIX_READY);
 
     int res = 1;
     while (res != -1) {
