@@ -10,6 +10,7 @@ typedef struct msg_t{
     uint8_t cmd;
     uint32_t totPckts;
     uint32_t curPckts;
+    uint32_t nbytes;
     char* data;
     struct msg_t* next;
 }msg_t;
