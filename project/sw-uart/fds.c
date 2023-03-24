@@ -214,6 +214,8 @@ void recieveMsgHandler(){
         return; 
     }else{
         //if we havent seen a cmnd pckt already then we are in error 
+        
+        if(0){
         if(!msg->has_cmd){
             msg->totPckts =0;
             msg->curPckts =0;
@@ -221,6 +223,7 @@ void recieveMsgHandler(){
 
             printk("err data packet but no cmnd packet seen\n");
             return;
+        }
         }
 
        // printk("message is data\n");

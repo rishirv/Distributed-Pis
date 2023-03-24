@@ -65,8 +65,7 @@ void notmain(void) {
             printk("Got ACK from %d \n",i);
             for(int k = 0 ; k < 4 ; k++){
 
-                //send_cmd(u,ESP_SEND_DATA,2,0x1,"SENT DATA FROM SERVER",25);
-                sendProgram(i,"HELLO FROM BEN ON SERVER",26);
+                sendProgram(i,"HELLO FROM BEN ON SERVER",25);
                 delay_us(100000);
             }
             printk("sent msg\n");

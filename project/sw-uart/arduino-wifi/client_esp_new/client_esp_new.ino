@@ -202,7 +202,6 @@ void relay_to_pi( uint8_t from){
   client = wifiArr[from];
   }
   // first packet has already been processed from this client: we make assumption that 
-
   // write any subsequent messages that are on the line. 
   while(client.available() /32 ){
     for(int i =0; i < 32; i++){

@@ -160,7 +160,7 @@ void synchronize() {
 }
 
 int main(int argc, char *argv[]) {
-    char *dev_name = "/dev/cu.usbserial-110";
+    char *dev_name = find_ttyusb_last();
     if (!dev_name)
         panic("didn't find a device\n");
 
