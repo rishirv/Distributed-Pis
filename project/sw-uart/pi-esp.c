@@ -36,7 +36,14 @@ void system_init(int server){
     
     int success = 0;
     if(server) success = server_init();
-    else success = client_init(u);
+    else {
+        success = connect_to_wifi(u);
+        while(success == -1){
+            delay_us(100000);
+            printk("connecting..\n");
+            success = connect_to_wifi(u);
+        }
+    }
 
     if (success == -1) panic("err, issue in initializing wifi. Check if esps are properly configured");
 }
@@ -247,12 +254,16 @@ int get_connected(uint8_t* buff) {
     send_cmd(u,ESP_GET_CONNECTED_LIST,0xf,0xf,0,0);
     
     fd fds = get_fd(1);
-    while(!has_msg(&fds)) fds = get_fd(1);
+    while(Q_empty(&fileTable[1].msg_q));
 
-     buff = (uint8_t*)get_msg(&fds);
+    msg_t* msg = Q_pop(&fileTable[1].msg_q);
     int k = 0;
     for(int i = 0; i < 16; i ++){
-        printk("[%d]",buff[i]);
+    if(msg->data[i] > 0){
+        buff[k] = msg->data[i];
+        k++;
+        }
+
 //        if(buff[i] > 0) k++;
     } 
 

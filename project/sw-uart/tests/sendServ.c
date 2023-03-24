@@ -39,8 +39,16 @@ void notmain(void) {
     trace("about to use the sw-uart\n");
     trace("if your pi locks up, it means you are not transmitting\n");
 
-    // BIG DEAL TODO : to make the uart global I made a constants file: it just has a u 
-    // it does not init it (cant do it dynamically from a header), so we must be sure to malloc and init this on startup. (why? well we need it global for the interrupt handler else its really hard)  
+ 
+    //hardcoded for me to work on 2 esps and 1 pi
+    int j = 0;
+    while(1){
+        delay_us(10000000);
+        j++;
+        send_cmd(u,ESP_SEND_DATA,2,0x1,"SENT DATA FROM SERVER",25);
+        printk("sent data %d\n",j);
+    }
+
    
     uint8_t pis[16];
     memset(pis,0,16);
@@ -54,7 +62,11 @@ void notmain(void) {
         //char* msg = (char*)get_msg(&fds);
         if(strcmp(msg->data,"ACK")==0) {
             printk("Got ACK from %d \n",i);
-            send_cmd(u,ESP_SEND_DATA,i,0x1,"SENT DATA FROM SERVER",25);
+            for(int k = 0 ; k < 4 ; k++){
+                send_cmd(u,ESP_SEND_DATA,2,0x1,"SENT DATA FROM SERVER",25);
+                delay_us(100000);
+            }
+            printk("sent msg\n");
             //msg = NULL;
             break;
         }

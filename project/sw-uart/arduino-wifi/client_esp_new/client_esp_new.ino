@@ -62,6 +62,8 @@ typedef struct pi_buff{
   int curPckts = 0;
   uint8_t cmnd = 0;
   esp_cmnd_pckt* cmnd_pckt = NULL;
+  uint8_t from;
+  uint8_t to;
 }pi_buff;
 
 //############################# CLIENT SPECIFIC##########################
@@ -196,7 +198,9 @@ pi_buff* from_pi = (pi_buff*)malloc(sizeof(pi_buff));
 
 // relays info from the wifi clients down the pipe to the pi
 void relay_to_pi( uint8_t from){
+  if(SERVER){
   client = wifiArr[from];
+  }
   // first packet has already been processed from this client: we make assumption that 
 
   // write any subsequent messages that are on the line. 
@@ -240,19 +244,25 @@ void send_nack(){
 // TODO: take in which pi_buffer we should be looking at, i.e the esp_to 
 void send_msg(){
 
-  while(!client.connected()) client.connect(serverIP,1001);
+  //while(!client.connected()) client.connect(serverIP,1001);
   //TODO fix up for server once test passes
   if(SERVER){
-    client = wifiArr[from_pi->cmnd_pckt->esp_To];
+    client = wifiArr[from_pi->to];
+    if(!client) {
+      Serial.println("client not connected");
+    } 
   }
   
+  //Serial.printf("%d client from\n",from_pi->to);
   char* cmnd_pckt = (char*)from_pi->cmnd_pckt;
   for(int i = 0; i < 32;i++){
     client.write(cmnd_pckt[i]);
   }
+ // Serial.printf("client IP: %d \n", client.remoteIP()[3]&0b1111);
   char* data = (char*)from_pi->buff;
   for(int i = 0; i < from_pi->numPckts;i++){
     for (int k = 0; k < 32;k++){
+      //Serial.printf("%c",data[k+(i*k)]);
       client.write(data[k+(i*k)]);
     }
   }
@@ -299,7 +309,7 @@ void clean(){
  // drain the read buffer in case we are out of sync
  while(mySerial.available()){
    mySerial.read();
-  //make yield();
+  // yield();
  }
 }
 
@@ -334,9 +344,15 @@ void parsePacket(char* packet){
       from_pi->numPckts = ((pckt->size /30)+(pckt->size % 30 > 0));
       from_pi->cmnd = pckt->cmnd;
       *from_pi->cmnd_pckt = *pckt;
+      from_pi->to = pckt->esp_To;
+     // Serial.printf("TO pi field on cmnd: %d and now on struct %d", pckt->esp_To,from_pi->to);      
+      
   }else{
     // its data, check for errors 
-    if (from_pi->cmnd == 0 || from_pi->buff == NULL) return clean();
+    if (from_pi->cmnd == 0 || from_pi->buff == NULL) {
+      Serial.println("cmnd zero returning");
+      return clean();
+    }
     
     // We actually want to include all the header packets bc it will be needed on the other side as well. 
     esp_pckt * data_pckt = (esp_pckt*)pckt;
@@ -481,7 +497,7 @@ void loop() {
   // todo : run thru a list of these structs and pass the approrpiate one to runCmnd
   if(from_pi->runRdy) return runCmnd();
   if(mySerial.available() > 31){
-    Serial.println("got packet");
+    //Serial.println("got packet");
    return parseNreadPckt();
   }
   i++;

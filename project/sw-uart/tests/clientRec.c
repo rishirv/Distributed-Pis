@@ -50,7 +50,7 @@ void notmain(void) {
     fd fds = get_fd(1);
     
     send_cmd(u,ESP_SEND_DATA,0x1,0x2,"ACK",4);
-    while(!Q_empty(&fileTable[1].msg_q));
+    while(Q_empty(&fileTable[1].msg_q));
 
 
     msg_t* buff = Q_pop(&fileTable[1].msg_q);
