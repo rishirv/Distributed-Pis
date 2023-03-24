@@ -152,7 +152,7 @@ void recieveMsgHandler(){
     gpio_event_clear(RXPIN);
     // if we timeout then just return
     if (bytesRead < 32) {
-        printk("failed: %d",bytesRead);
+        printk("failed: %d\n",bytesRead);
         return;
     }
     
