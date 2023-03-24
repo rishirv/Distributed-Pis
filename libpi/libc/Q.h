@@ -18,8 +18,8 @@ static unsigned Q_nelem(Q_t *q) { return q->cnt; }
 static int Q_empty(Q_t *q)  { 
     if(q->head)
         return 0;
-    assert(Q_nelem(q) == 0);
-    demand(!q->tail, invalid Q);
+    // assert(Q_nelem(q) == 0);
+    // demand(!q->tail, invalid Q);
     return 1;
 }
 

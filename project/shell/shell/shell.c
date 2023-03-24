@@ -6,7 +6,7 @@
 
 #include "libunix.h"
 #include "simple-boot.h"
-#include "constants.h"
+#include "constant.h"
 
 int fd;
 int trace_p = 0;

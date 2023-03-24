@@ -54,7 +54,7 @@ void notmain(void) {
 
 
     msg_t* buff = Q_pop(&fileTable[1].msg_q);
-    printk("Recieved: %s \n",buff->data);
+    printk("Recieved: %s \n", buff->data);
 
 
     trace("TRACE: done!\n");

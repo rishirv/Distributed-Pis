@@ -19,7 +19,7 @@ PROGS = tests/sndRec_test1/recieveServ.c
 #PROGS = tests/connList/connList.c
 
 PROGS = tests/clientRec.c
-PROGS = tests/sendServ.c
+# PROGS = tests/sendServ.c
 
 
 #PROGS = tests/sndRec_test1/recieveServ.c

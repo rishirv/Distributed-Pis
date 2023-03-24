@@ -3,10 +3,12 @@
 #include "vector-base.h"
 #include "sw-uart.h"
 #include "get-code.h"
+#include "rpi-interrupts.h"
+#include "constant.h"
 #include "constants.h"
 #include "pi-esp.h"
 
-sw_uart_t u;
+// sw_uart_t u;
 
 static unsigned
 has_data_timeout(unsigned timeout) {
@@ -64,17 +66,17 @@ void run_prog(void) {
 
     uint32_t addr = 0x80000;
     uint8_t buf[8000];
-    memcpy(buf, "START:", 6);
+    // memcpy(buf, "START:", 6);
 
     for (int i = 0; i < nbytes; i++) {
         uint8_t byte = uart_get8();
         PUT8(addr + i, byte);
-        buf[i + 6] = byte;
+        buf[i] = byte;
     }
-    memcpy(buf + 6 + nbytes, ":END", 4);
+    // memcpy(buf + 6 + nbytes, ":END", 4);
 
     // uint32_t *header = (void *)addr;
-    uint32_t *header = (uint32_t *)&buf[6];
+    uint32_t *header = (uint32_t *) buf;
     // Confirm info in headers
     assert(header[0] == 0x12345678);
     assert(header[2] == 0x80000);
@@ -86,7 +88,10 @@ void run_prog(void) {
         // sendProgram(pis[i], buf, nbytes);
     // }
 
-    sw_uart_putk_ignorenull(&u, buf, 8000);
+    sendProgram(2, buf, nbytes);
+
+
+    // sw_uart_putk_ignorenull(&u, buf, 8000);
     // }
     // BRANCHTO(0x80010);
 
@@ -95,9 +100,35 @@ void run_prog(void) {
     (void)pis[0];
 }
 
+void init(){
+    // repetitive, sw uart init does it , but here for sanity 
+    gpio_set_input(21);
+    gpio_set_pullup(21);
+    gpio_set_output(23);
+    
+
+    u = (sw_uart_t*) kmalloc(sizeof(sw_uart_t));
+    *u = sw_uart_init(23,21,9600);
+    char* buff = kmalloc(sizeof(char) * 32);
+    
+    init_fileTable();
+    int_init();
+    gpio_int_falling_edge(21);
+    system_enable_interrupts();
+    
+   // printk("init server:\n");
+  //  send_cmd(u,ESP_SEND_DATA,0xf,0xf,"DOES THIS WORK",25);
+    printk("about to inti server\n");
+    int servIP = server_init();
+  //  while(servIP == -1) servIP = server_init();
+    printk("server ip = %x\n",servIP);
+}
+
 void notmain(void) {
-    uart_init();
-    u = sw_uart_init(4, 5, 9600);
+    // uart_init();
+    // u = sw_uart_init(4, 5, 9600);
+
+    init();
 
     synchronize();
 

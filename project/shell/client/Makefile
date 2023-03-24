@@ -2,9 +2,16 @@
 PROGS := client.c
 
 CFLAGS += -I..
-CFLAGS += -I../../../server-client-sw_uart/lib
+CFLAGS += -I../../sw-uart
+# CFLAGS += -I../../../server-client-sw_uart/lib
 
-COMMON_SRC += ../../../server-client-sw_uart/lib/sw-uart.c
+COMMON_SRC += ../../sw-uart/interrupts-c.c
+COMMON_SRC += ../../sw-uart/interrupts-asm.S
+COMMON_SRC += ../../sw-uart/sw-uart.c
+COMMON_SRC += ../../sw-uart/pi-esp.c
+COMMON_SRC += ../../sw-uart/fds.c 
+COMMON_SRC += ../../sw-uart/gpio-int.c
+# COMMON_SRC += ../../../server-client-sw_uart/lib/sw-uart.c
 # uncomment if you want it to automatically run.
 # RUN=1
 
