@@ -38,7 +38,7 @@ void init(){
 }
 
 void notmain(void) {
-    init();
+    system_init(0);
     trace("about to use the sw-uart\n");
     trace("if your pi locks up, it means you are not transmitting\n");
 
